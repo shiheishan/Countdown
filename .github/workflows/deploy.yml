@@ -15,6 +15,6 @@ jobs:
         env:
           RTH_API_KEY: ${{secrets.RTH_API_KEY}}
         run: |
-          f=$(mktemp)
-          curl -fsSL https://host.retiehe.com/cli -o $f
-          node $f --site silver422 --outdir .
+          f=$(  f=$(mktemp)
+  curl -fsSL https://host.retiehe.com/cli -o $f
+  node $f --site silver422.rth2.xyz --outdir .
