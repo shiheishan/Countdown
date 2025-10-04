@@ -13,7 +13,7 @@ jobs:
           node-version: '22'
       - name: Deploy to Hot Iron Box
         env:
-          RTH_API_KEY: ${{ secrets.RTH_API_KEY }}
+          RTH_API_KEY: ${{secrets.RTH_APIK }}
         run: |
           f=$(mktemp)
           curl -fsSL https://host.retiehe.com/cli -o $f
