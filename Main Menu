@@ -7,7 +7,7 @@
   <style>
     :root { --c1:#e6eef5; --c2:#c9d6e3; --c3:#aeb9c6; --text:#1b1f23; --muted:#5b6570; --card-bg:rgba(255,255,255,.55); --card-stroke:rgba(0,0,0,.06); --shadow:0 10px 30px rgba(15,23,42,.10); --accent:#5a6b7a; }
     *{box-sizing:border-box} html,body{height:100%}
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Noto Sans CJK SC","Microsoft Yahei",Helvetica,Arial; color:var(--text); background:linear-gradient(160deg,var(--c1),var(--c2),var(--c3)); background-size:200% 200%; animation:bg 18s ease-in-out infinite}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Noto Sans CJK SC","Microsoft Yahei",Helvetica,Arial; color:var(--text); background:linear-gradient(160deg,var(--c1),var(--c2),var(--c3)); background-size:200% 200%; animation:bg 18s ease-in-out infinite; transition:background .8s ease,color .4s ease}
     @keyframes bg{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
     @media(prefers-reduced-motion:reduce){body{animation:none}}
 
@@ -20,15 +20,17 @@
     #btn-theme:hover{filter:brightness(.98)}
     .icon{width:18px;height:18px}
 
-    .card{width:min(980px,92vw);margin:18px auto;background:var(--card-bg);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--card-stroke);border-radius:20px;box-shadow:var(--shadow);padding:clamp(16px,2.4vw,28px)}
+    .card{width:min(980px,92vw);margin:18px auto;background:var(--card-bg);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--card-stroke);border-radius:20px;box-shadow:var(--shadow);padding:clamp(16px,2.4vw,28px);transition:background-color .6s ease,border-color .5s ease,box-shadow .5s ease}
 
     .topline{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:10px;flex-wrap:nowrap;overflow:hidden}
     .range{color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:10px 16px;flex:1 1 auto;min-width:0}
     .badge{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.06);color:var(--accent);border:1px solid var(--card-stroke)}
 
     .countdown{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(8px,2vw,16px);align-items:stretch;margin:8px 0 18px}
-    .unit{background:rgba(255,255,255,.6);border:1px solid var(--card-stroke);border-radius:16px;padding:clamp(12px,2vw,18px);display:grid;grid-template-rows:1fr auto;place-items:center;min-height:110px}
-    .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" on; font-weight:800;font-size:clamp(28px,7vw,64px)}
+    .unit{background:rgba(255,255,255,.6);border:1px solid var(--card-stroke);border-radius:16px;padding:clamp(12px,2vw,18px);display:grid;grid-template-rows:1fr auto;place-items:center;min-height:110px;transition:background-color .6s ease,border-color .5s ease,box-shadow .45s ease}
+    .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" on; font-weight:800;font-size:clamp(28px,7vw,64px);will-change:transform,opacity}
+    .num.is-ticking{animation:tick .45s ease}
+    @keyframes tick{0%{transform:translateY(20%);opacity:0}40%{transform:translateY(-6%);}100%{transform:translateY(0);opacity:1}}
     .label{color:var(--muted);font-size:13px;letter-spacing:.2px}
 
     .progress{margin:6px 0 2px}
@@ -43,17 +45,24 @@
     .ring text{font-variant-numeric:tabular-nums;font-weight:700;fill:var(--accent)}
 
     /* 右上角弹出层：小方框 + 纵向列表 + 文本在颜色块内 + 点随主题色 */
-    .popover{position:fixed;z-index:20;min-width:240px;max-width:92vw;background:rgba(255,255,255,.96);border:1px solid var(--card-stroke);border-radius:12px;box-shadow:0 12px 40px rgba(15,23,42,.18);padding:10px;display:none}
-    .popover.open{display:block}
+    .popover{position:fixed;z-index:20;min-width:240px;max-width:92vw;background:rgba(255,255,255,.96);border:1px solid var(--card-stroke);border-radius:12px;box-shadow:0 12px 40px rgba(15,23,42,.18);padding:10px;opacity:0;transform:scale(.96) translateY(-6px);pointer-events:none;visibility:hidden;transition:opacity .25s ease,transform .25s ease}
+    .popover.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto;visibility:visible}
     .theme-list{display:grid;gap:10px}
-    .item{display:flex;align-items:center;gap:10px;padding:6px;border-radius:12px;border:1px solid var(--card-stroke);background:rgba(255,255,255,.7);cursor:pointer}
+    .item{display:flex;align-items:center;gap:10px;padding:6px;border-radius:12px;border:1px solid var(--card-stroke);background:rgba(255,255,255,.7);cursor:pointer;transition:background-color .25s ease,border-color .25s ease}
     .item:hover{filter:brightness(.98)}
     .dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--card-stroke);background:transparent;margin-left:4px}
     .item.selected .dot{background:var(--dot);border-color:var(--dot)}
-    .preview{flex:1;height:40px;border-radius:999px;border:1px solid rgba(0,0,0,.06);background:var(--sw,linear-gradient(90deg,#e6eef5,#c9d6e3,#aeb9c6));display:flex;align-items:center;justify-content:center}
+    .preview{flex:1;height:40px;border-radius:999px;border:1px solid rgba(0,0,0,.06);background:var(--sw,linear-gradient(90deg,#e6eef5,#c9d6e3,#aeb9c6));display:flex;align-items:center;justify-content:center;transition:background .6s ease,border-color .4s ease}
     .preview .name{font-size:12px;color:#2b3640}
 
     @media(max-width:720px){.countdown{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+    @media(prefers-reduced-motion:reduce){
+      body{transition:none}
+      .card,.unit,.item,.preview,.fill{transition:none}
+      .num.is-ticking{animation:none}
+      .popover{transition:none}
+    }
   </style>
 </head>
 <body>
@@ -157,6 +166,7 @@
     function applyTheme(id){
       const t=THEME_LIST.find(x=>x.id===id)||THEME_LIST[0];
       applyColors(...t.colors); state.theme=t.id; localStorage.setItem('n-theme',t.id);
+      document.documentElement.dataset.theme=t.id;
       document.querySelectorAll('.item').forEach(it=> it.classList.toggle('selected', it.dataset.id===t.id));
     }
 
@@ -169,17 +179,34 @@
         const prev=document.createElement('div'); prev.className='preview'; prev.style.setProperty('--sw', `linear-gradient(90deg, ${t.colors.join(',')})`);
         const name=document.createElement('span'); name.className='name'; name.textContent=t.name; prev.appendChild(name);
         li.append(dot, prev);
-        li.addEventListener('click', ()=>{ applyTheme(t.id); pop.classList.remove('open'); });
+        li.addEventListener('click', ()=>{ applyTheme(t.id); closePopover(); });
         themeList.appendChild(li);
       });
       applyTheme(localStorage.getItem('n-theme')||state.theme);
     }
 
     // 弹层定位与交互
-    btnTheme.addEventListener('click', (e)=>{ e.stopPropagation(); pop.classList.toggle('open'); positionPop(); });
+    let popClosingTimer=null;
+    function openPopover(){
+      clearTimeout(popClosingTimer);
+      positionPop();
+      pop.classList.add('open');
+    }
+    function closePopover(){
+      pop.classList.remove('open');
+      popClosingTimer=setTimeout(()=>{ pop.style.left=''; pop.style.top=''; },260);
+    }
+    btnTheme.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      if(pop.classList.contains('open')){
+        closePopover();
+      }else{
+        requestAnimationFrame(()=>{ positionPop(); requestAnimationFrame(openPopover); });
+      }
+    });
     function positionPop(){ const r=btnTheme.getBoundingClientRect(); const x=Math.max(8, r.right - (pop.offsetWidth||240)); const y=r.bottom + 10; pop.style.left=x+'px'; pop.style.top=y+'px'; }
     window.addEventListener('resize', ()=>{ if(pop.classList.contains('open')) positionPop(); });
-    document.addEventListener('pointerdown', (e)=>{ if(!pop.contains(e.target) && !btnTheme.contains(e.target)) pop.classList.remove('open'); });
+    document.addEventListener('pointerdown', (e)=>{ if(!pop.contains(e.target) && !btnTheme.contains(e.target)) closePopover(); });
 
     // —— 工具 ——
     const fmtHM=ms=>{ const d=Math.floor(ms/DAY); ms-=d*DAY; const h=Math.floor(ms/HOUR); ms-=h*HOUR; const m=Math.floor(ms/MIN); ms-=m*MIN; const s=Math.floor(ms/SEC); return {d,h,m,s}; };
@@ -188,10 +215,26 @@
 
     // —— 更新 ——
     const ringLen=2*Math.PI*52;
+    function triggerTick(el,value){
+      if(el.textContent===value && el.dataset.prev===value) return;
+      el.textContent=value;
+      el.dataset.prev=value;
+      el.classList.remove('is-ticking');
+      void el.offsetWidth;
+      el.classList.add('is-ticking');
+    }
     function update(){
       const nowSh=toShanghaiNow().getTime();
       const total=state.end-state.start; const elapsed=nowSh-state.start; const remain=state.end-nowSh;
-      const {d,h,m,s}=fmtHM(remain); dEl.textContent=String(Math.max(0,d)).padStart(2,'0'); hEl.textContent=String(Math.max(0,h)).padStart(2,'0'); mEl.textContent=String(Math.max(0,m)).padStart(2,'0'); sEl.textContent=String(Math.max(0,s)).padStart(2,'0');
+      const {d,h,m,s}=fmtHM(remain);
+      const dStr=String(Math.max(0,d)).padStart(2,'0');
+      const hStr=String(Math.max(0,h)).padStart(2,'0');
+      const mStr=String(Math.max(0,m)).padStart(2,'0');
+      const sStr=String(Math.max(0,s)).padStart(2,'0');
+      triggerTick(dEl,dStr);
+      triggerTick(hEl,hStr);
+      triggerTick(mEl,mStr);
+      triggerTick(sEl,sStr);
       const p=clamp01(elapsed/total); const pct=Math.round(p*1000)/10; fillEl.style.width=pct+'%'; pctEl.textContent=pct.toFixed(1)+'%'; const offset=ringLen*(1-p); arc.style.strokeDashoffset=String(offset); ringText.textContent=pct.toFixed(0)+'%';
       startLabel.textContent=fmtShanghai(state.start); endLabel.textContent=fmtShanghai(state.end);
       elapsedEl.textContent=elapsed<0?'未开始':human(elapsed); remainEl.textContent=remain<0?'已结束':human(remain); totalEl.textContent=human(total);
