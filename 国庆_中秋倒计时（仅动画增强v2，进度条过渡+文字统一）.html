@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>国庆·中秋假期结束倒计时（主题联动＋预览固定）</title>
+  <title>国庆·中秋假期</title>
   <style>
     /* 主题变量：背景三色 + 强调双色（影响进度条&环形） */
     :root {
@@ -20,7 +20,18 @@
 
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Noto Sans CJK SC","Microsoft Yahei",Helvetica,Arial;color:var(--text);background:linear-gradient(160deg,var(--c1),var(--c2),var(--c3));background-size:200% 200%;animation:bg 18s ease-in-out infinite}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Noto Sans CJK SC","Microsoft Yahei",Helvetica,Arial;color:var(--text);position:relative;z-index:0;background:linear-gradient(160deg,var(--c1),var(--c2),var(--c3));background-size:200% 200%;animation:bg 18s ease-in-out infinite}
+    body::before{
+      content:"";
+      position:fixed; inset:0; z-index:-1; pointer-events:none;
+      background:linear-gradient(160deg,var(--c1_next,var(--c1)),var(--c2_next,var(--c2)),var(--c3_next,var(--c3)));
+      background-size:200% 200%;
+      animation:bg 18s ease-in-out infinite;
+      opacity:0;
+      transition:opacity var(--dur-bg) ease;
+      will-change:opacity;
+    }
+    body.bg-fading::before{opacity:1;}
     @keyframes bg{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
     @media(prefers-reduced-motion:reduce){body{animation:none}}
 
