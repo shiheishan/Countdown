@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>国庆·中秋假期结束倒计时（主题联动＋预览固定）</title>
+  <title>Main Menu</title>
   <style>
     /* 主题变量：背景三色 + 强调双色（影响进度条&环形） */
     :root {
@@ -20,7 +20,18 @@
 
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Noto Sans CJK SC","Microsoft Yahei",Helvetica,Arial;color:var(--text);background:linear-gradient(160deg,var(--c1),var(--c2),var(--c3));background-size:200% 200%;animation:bg 18s ease-in-out infinite}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Noto Sans CJK SC","Microsoft Yahei",Helvetica,Arial;color:var(--text);position:relative;z-index:0;background:linear-gradient(160deg,var(--c1),var(--c2),var(--c3));background-size:200% 200%;animation:bg 18s ease-in-out infinite}
+    body::before{
+      content:"";
+      position:fixed; inset:0; z-index:-1; pointer-events:none;
+      background:linear-gradient(160deg,var(--c1_next,var(--c1)),var(--c2_next,var(--c2)),var(--c3_next,var(--c3)));
+      background-size:200% 200%;
+      animation:bg 18s ease-in-out infinite;
+      opacity:0;
+      transition:opacity var(--dur-bg) ease;
+      will-change:opacity;
+    }
+    body.bg-fading::before{opacity:1;}
     @keyframes bg{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
     @media(prefers-reduced-motion:reduce){body{animation:none}}
 
@@ -99,7 +110,7 @@ body.bg-fading .fill::before{ opacity:1; }
 <body>
   <div class="wrap">
     <header>
-      <h1>国庆·中秋假期</h1>
+      <h1>Main Menu</h1>
       <button id="btn-theme" title="主题/颜色">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 1 0-14 5 5 0 0 1 5 5 2 2 0 0 0 2 2h1a2 2 0 0 1 0 4h-1a7 7 0 0 1-7 3Z"/><circle cx="6.5" cy="12.5" r="1.5"/><circle cx="9.5" cy="7.5" r="1.5"/><circle cx="14.5" cy="7.5" r="1.5"/><circle cx="17.5" cy="12.5" r="1.5"/></svg>
         <span style="font-size:13px">主题</span>
