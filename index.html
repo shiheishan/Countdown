@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>国庆·中秋</title>
+  <link rel="stylesheet" href="./styles/main.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 id="pageTitle">国庆·中秋</h1>
+      <button id="btn-theme" title="主题/颜色">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22a7 7 0 0 1 0-14 5 5 0 0 1 5 5 2 2 0 0 0 2 2h1a2 2 0 0 1 0 4h-1a7 7 0 0 1-7 3Z" />
+          <circle cx="6.5" cy="12.5" r="1.5" />
+          <circle cx="9.5" cy="7.5" r="1.5" />
+          <circle cx="14.5" cy="7.5" r="1.5" />
+          <circle cx="17.5" cy="12.5" r="1.5" />
+        </svg>
+        <span class="theme-label">主题</span>
+      </button>
+      <div class="popover" id="pop" role="listbox" aria-label="选择主题">
+        <div class="theme-list" id="themeList"></div>
+      </div>
+    </header>
+
+    <main class="card">
+      <div class="topline">
+        <div class="range">
+          <div>开始：<strong id="startLabel"></strong></div>
+          <div>结束：<strong id="endLabel"></strong></div>
+        </div>
+        <div class="badge" id="statusBadge">假期中</div>
+      </div>
+
+      <section class="countdown" aria-live="polite">
+        <div class="unit"><div class="num" id="days">--</div><div class="label">天</div></div>
+        <div class="unit"><div class="num" id="hours">--</div><div class="label">小时</div></div>
+        <div class="unit"><div class="num" id="mins">--</div><div class="label">分钟</div></div>
+        <div class="unit"><div class="num" id="secs">--</div><div class="label">秒</div></div>
+      </section>
+
+      <section class="progress">
+        <div class="bar" aria-label="假期进度"><div class="fill" id="fill"></div></div>
+        <div class="meta">
+          <div>已过：<strong id="pct">0%</strong></div>
+          <div>已用时：<strong id="elapsed">--</strong></div>
+          <div>剩余：<strong id="remain">--</strong></div>
+          <div>总时长：<strong id="total">--</strong></div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="panel wheel-panel">
+          <div class="wheel-head">
+            <h3>时光之轮</h3>
+          </div>
+          <div class="wheel-grid">
+            <div class="ring-wrap">
+              <svg class="ring" viewBox="0 0 120 120" role="img" aria-label="时光之轮">
+                <defs>
+                  <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop id="g1s1" offset="0%" stop-color="var(--acc1)" />
+                    <stop id="g1s2" offset="100%" stop-color="var(--acc2)" />
+                  </linearGradient>
+                  <radialGradient id="gAmbient" cx="50%" cy="50%" r="55%">
+                    <stop offset="0%" stop-color="var(--acc2)" stop-opacity=".26" />
+                    <stop offset="65%" stop-color="var(--acc1)" stop-opacity=".08" />
+                    <stop offset="100%" stop-color="var(--acc1)" stop-opacity="0" />
+                  </radialGradient>
+                </defs>
+                <g class="ring-layers">
+                  <circle class="ring-ambient" cx="60" cy="60" r="58" fill="url(#gAmbient)" />
+                  <circle class="ring-track" cx="60" cy="60" r="52" transform="rotate(-90 60 60)" />
+                  <circle class="ring-ticks" cx="60" cy="60" r="52" transform="rotate(-90 60 60)" />
+                  <circle id="arc" cx="60" cy="60" r="52" stroke="url(#g1)" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="326.72" stroke-dashoffset="326.72" transform="rotate(-90 60 60)" />
+                  <circle id="arcHead" class="ring-head" cx="60" cy="8" r="3.8" opacity="0" />
+                  <circle class="ring-inner" cx="60" cy="60" r="41" />
+                </g>
+                <text id="ringText" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle">
+                  <tspan id="ringPct" class="ring-percent" x="50%" dy="-.2em">0%</tspan>
+                  <tspan id="ringState" class="ring-state" x="50%" dy="1.6em">假期中</tspan>
+                </text>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./scripts/app.js"></script>
+</body>
+</html>
