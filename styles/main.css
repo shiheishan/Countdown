@@ -290,11 +290,6 @@ body.bg-fading .ring-wrap::before {
   filter: none !important;
 }
 
-body.bg-fading .ring,
-body.bg-fading .ring * {
-  transition: none !important;
-}
-
 .meta {
   margin-top: 10px;
   display: flex;
@@ -389,7 +384,7 @@ body.bg-fading .ring * {
   align-items: center;
   justify-content: center;
   padding: 0;
-  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.18);
+  box-shadow: none;
 }
 
 .ring-wrap::before {
@@ -411,7 +406,7 @@ body.bg-fading .ring * {
   height: auto;
   display: block;
   overflow: visible;
-  filter: none;
+  filter: drop-shadow(0 16px 28px rgba(15, 23, 42, 0.18));
 }
 
 .ring text {
@@ -461,10 +456,15 @@ body.bg-fading .ring * {
 }
 
 .ring .ring-head {
-  fill: var(--acc2);
+  color: var(--acc2);
+  fill: currentColor;
   stroke: rgba(255, 255, 255, 0.85);
   stroke-width: 0.8;
-  transition: opacity var(--dur-accent) ease, transform var(--dur-accent) ease;
+  transition: color var(--dur-accent) ease,
+              fill var(--dur-accent) ease,
+              stroke var(--dur-accent) ease,
+              opacity var(--dur-accent) ease,
+              transform var(--dur-accent) ease;
 }
 
 .popover {
