@@ -58,13 +58,6 @@ function applyTheme(themeId) {
 
   setVar('--accent', accent);
 
-  const stop1 = document.getElementById('g1s1');
-  const stop2 = document.getElementById('g1s2');
-  if (stop1 && stop2) {
-    stop1.setAttribute('stop-color', acc1);
-    stop2.setAttribute('stop-color', acc2);
-  }
-
   const duration = parseDuration(getComputedStyle(document.documentElement).getPropertyValue('--dur-bg'));
   window.clearTimeout(fadeTimer);
   fadeTimer = window.setTimeout(() => commitThemeVariables(theme), duration);
