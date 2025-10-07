@@ -3,10 +3,15 @@ import { STORAGE_KEYS } from '../config/app.js';
 import { elements } from './dom.js';
 
 let fadeTimer = null;
+let cleanupFrame = null;
 let currentThemeId = null;
 
 const setVar = (name, value) => {
   document.documentElement.style.setProperty(name, value);
+};
+
+const clearVar = (name) => {
+  document.documentElement.style.removeProperty(name);
 };
 
 const parseDuration = (value) => {
@@ -22,6 +27,21 @@ function markSelected(themeId) {
   });
 }
 
+const queueNextVarCleanup = () => {
+  if (cleanupFrame !== null) {
+    window.cancelAnimationFrame(cleanupFrame);
+  }
+
+  cleanupFrame = window.requestAnimationFrame(() => {
+    clearVar('--c1_next');
+    clearVar('--c2_next');
+    clearVar('--c3_next');
+    clearVar('--acc1_next');
+    clearVar('--acc2_next');
+    cleanupFrame = null;
+  });
+};
+
 function commitThemeVariables(theme) {
   const [c1, c2, c3] = theme.bg;
   const [acc1, acc2] = theme.acc;
@@ -31,11 +51,7 @@ function commitThemeVariables(theme) {
   setVar('--c3', c3);
   setVar('--acc1', acc1);
   setVar('--acc2', acc2);
-  setVar('--c1_next', '');
-  setVar('--c2_next', '');
-  setVar('--c3_next', '');
-  setVar('--acc1_next', '');
-  setVar('--acc2_next', '');
+  queueNextVarCleanup();
   document.body.classList.remove('bg-fading');
 }
 
@@ -44,6 +60,11 @@ function applyTheme(themeId) {
   const [c1, c2, c3] = theme.bg;
   const [acc1, acc2] = theme.acc;
   const accent = theme.accent ?? acc2;
+
+  if (cleanupFrame !== null) {
+    window.cancelAnimationFrame(cleanupFrame);
+    cleanupFrame = null;
+  }
 
   setVar('--c1_next', c1);
   setVar('--c2_next', c2);
