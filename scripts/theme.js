@@ -9,6 +9,10 @@ const setVar = (name, value) => {
   document.documentElement.style.setProperty(name, value);
 };
 
+const clearVar = (name) => {
+  document.documentElement.style.removeProperty(name);
+};
+
 const parseDuration = (value) => {
   const trimmed = value.trim();
   if (trimmed.endsWith('ms')) return parseFloat(trimmed);
@@ -31,11 +35,11 @@ function commitThemeVariables(theme) {
   setVar('--c3', c3);
   setVar('--acc1', acc1);
   setVar('--acc2', acc2);
-  setVar('--c1_next', '');
-  setVar('--c2_next', '');
-  setVar('--c3_next', '');
-  setVar('--acc1_next', '');
-  setVar('--acc2_next', '');
+  clearVar('--c1_next');
+  clearVar('--c2_next');
+  clearVar('--c3_next');
+  clearVar('--acc1_next');
+  clearVar('--acc2_next');
   document.body.classList.remove('bg-fading');
 }
 
