@@ -455,6 +455,16 @@ body.bg-fading .fill {
   stroke-width: 0.8;
 }
 
+/* 让渐变 stop 的颜色也做同样的过渡 */
+#g1s1, #g1s2 {
+  transition: stop-color var(--dur-accent) ease;
+}
+
+/* 用和小圆相同的“next”变量——同一时刻起跑 */
+#g1s1 { stop-color: var(--acc1_next, var(--acc1)); }
+#g1s2 { stop-color: var(--acc2_next, var(--acc2)); }
+
+/* 小圆维持补间，和上面时长一致 */
 .ring .ring-head {
   /* 读取 next 变量 → 立即触发可插值颜色变化 */
   fill: var(--acc2_next, var(--acc2));
