@@ -284,11 +284,9 @@ body.bg-fading .fill {
   transition: none !important;
 }
 
-/* 在主题 cross-fade 期间，禁用轮子上的滤镜与过渡，避免闪烁 */
-body.bg-fading .ring,
-body.bg-fading .ring-wrap::before {
-  filter: none !important;
-}
+/* 只在 cross-fade 期间禁用地面柔光，别碰圆环本体 */
+/* 如果你手机上依旧稳定，不禁用也行 */
+/* （本包已去掉这段，避免误杀阴影） */
 
 .meta {
   margin-top: 10px;
@@ -407,6 +405,8 @@ body.bg-fading .ring-wrap::before {
   display: block;
   overflow: visible;
   filter: drop-shadow(0 16px 28px rgba(15, 23, 42, 0.18));
+  will-change: filter;
+  transform: translateZ(0);
 }
 
 .ring text {
@@ -456,12 +456,11 @@ body.bg-fading .ring-wrap::before {
 }
 
 .ring .ring-head {
-  color: var(--acc2);
-  fill: currentColor;
+  /* 读取 next 变量 → 立即触发可插值颜色变化 */
+  fill: var(--acc2_next, var(--acc2));
   stroke: rgba(255, 255, 255, 0.85);
   stroke-width: 0.8;
-  transition: color var(--dur-accent) ease,
-              fill var(--dur-accent) ease,
+  transition: fill var(--dur-accent) ease,
               stroke var(--dur-accent) ease,
               opacity var(--dur-accent) ease,
               transform var(--dur-accent) ease;
