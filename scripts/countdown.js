@@ -3,6 +3,12 @@ import { breakdownDuration, humanizeDuration, formatShanghai } from '../utils/ti
 
 const RADIUS = 52;
 const RING_LENGTH = 2 * Math.PI * RADIUS;
+const RING_ANIMATION_DURATION = 420;
+const RING_ANIMATION_EPSILON = 1e-4;
+
+let ringAnimationFrame = null;
+let ringCurrentRatio = 0;
+let ringInitialized = false;
 
 const previousDigits = {
   days: '',
@@ -52,28 +58,95 @@ function updateRingGeometry(ringArc) {
   }
 }
 
-function setRingProgress({ arc, head, pct, state }, ratio, statusText) {
-  if (!arc || !head || !pct || !state) return;
+function resetRingProgress() {
+  if (ringAnimationFrame) {
+    cancelAnimationFrame(ringAnimationFrame);
+    ringAnimationFrame = null;
+  }
+  ringCurrentRatio = 0;
+  ringInitialized = false;
+}
 
-  const offset = RING_LENGTH * (1 - ratio);
-  arc.style.strokeDashoffset = String(offset);
-  pct.textContent = `${Math.round(ratio * 100)}%`;
-  state.textContent = statusText;
+function applyRingFrame({ arc, head, pct }, ratio) {
+  const safeRatio = clamp01(Number.isFinite(ratio) ? ratio : 0);
 
-  const theta = -Math.PI / 2 + ratio * 2 * Math.PI;
-  if (ratio > 0) {
+  if (arc) {
+    const offset = RING_LENGTH * (1 - safeRatio);
+    arc.style.strokeDashoffset = offset.toFixed(3);
+  }
+
+  if (pct) {
+    const percentValue = Math.round(safeRatio * 100);
+    pct.textContent = `${percentValue}%`;
+  }
+
+  if (!head) return;
+
+  const theta = -Math.PI / 2 + safeRatio * 2 * Math.PI;
+  if (safeRatio > 0) {
     const cx = 60 + Math.cos(theta) * RADIUS;
     const cy = 60 + Math.sin(theta) * RADIUS;
     head.setAttribute('cx', cx.toFixed(2));
     head.setAttribute('cy', cy.toFixed(2));
-    head.setAttribute('opacity', ratio >= 1 ? '0.65' : '1');
-    head.setAttribute('r', ratio >= 1 ? '4.6' : '3.8');
+    head.setAttribute('opacity', safeRatio >= 1 ? '0.65' : '1');
+    head.setAttribute('r', safeRatio >= 1 ? '4.6' : '3.8');
   } else {
     head.setAttribute('cx', '60');
     head.setAttribute('cy', '8');
     head.setAttribute('r', '3.8');
     head.setAttribute('opacity', '0');
   }
+}
+
+function setRingProgress(ringElements, ratio, statusText) {
+  if (!ringElements) return;
+  const { arc, head, pct, state } = ringElements;
+
+  if (state) {
+    state.textContent = statusText;
+  }
+
+  if (!arc) return;
+
+  const targetRatio = clamp01(Number.isFinite(ratio) ? ratio : 0);
+
+  if (!ringInitialized) {
+    applyRingFrame({ arc, head, pct }, targetRatio);
+    ringCurrentRatio = targetRatio;
+    ringInitialized = true;
+    return;
+  }
+
+  if (Math.abs(targetRatio - ringCurrentRatio) <= RING_ANIMATION_EPSILON) {
+    applyRingFrame({ arc, head, pct }, targetRatio);
+    ringCurrentRatio = targetRatio;
+    return;
+  }
+
+  if (ringAnimationFrame) {
+    cancelAnimationFrame(ringAnimationFrame);
+    ringAnimationFrame = null;
+  }
+
+  const startRatio = ringCurrentRatio;
+  const delta = targetRatio - startRatio;
+  const startTime = performance.now();
+
+  const step = (timestamp) => {
+    const elapsed = Math.min(1, (timestamp - startTime) / RING_ANIMATION_DURATION);
+    const eased = startRatio + delta * (1 - Math.pow(1 - elapsed, 3));
+    applyRingFrame({ arc, head, pct }, eased);
+
+    if (elapsed < 1) {
+      ringAnimationFrame = requestAnimationFrame(step);
+    } else {
+      ringAnimationFrame = null;
+      ringCurrentRatio = targetRatio;
+      applyRingFrame({ arc, head, pct }, targetRatio);
+    }
+  };
+
+  ringAnimationFrame = requestAnimationFrame(step);
 }
 
 function deriveStatus(labels, elapsed, remain) {
@@ -98,6 +171,7 @@ export function startCountdown(event) {
 
   const { digits, meta, labels, statusBadge, ring } = elements;
   updateRingGeometry(ring.arc);
+  resetRingProgress();
 
   ['days', 'hours', 'minutes', 'seconds'].forEach((key) => {
     ensureDigitSlots(digits[key], 2);
