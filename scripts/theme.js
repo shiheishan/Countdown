@@ -52,6 +52,11 @@ function commitThemeVariables(theme) {
   setVar('--acc1', acc1);
   setVar('--acc2', acc2);
   queueNextVarCleanup();
+  clearVar('--c1_next');
+  clearVar('--c2_next');
+  clearVar('--c3_next');
+  clearVar('--acc1_next');
+  clearVar('--acc2_next');
   document.body.classList.remove('bg-fading');
 }
 
