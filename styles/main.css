@@ -288,6 +288,7 @@ body.bg-fading .fill {
 body.bg-fading .ring,
 body.bg-fading .ring-wrap::before,
 body.bg-fading .ring text {
+body.bg-fading .ring-wrap::before {
   filter: none !important;
 }
 
@@ -391,6 +392,7 @@ body.bg-fading .ring * {
   justify-content: center;
   padding: 0;
   box-shadow: none;
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.18);
 }
 
 .ring-wrap::before {
@@ -414,6 +416,7 @@ body.bg-fading .ring * {
   overflow: visible;
   /* 按形状投影，圆形阴影 */
   filter: drop-shadow(0 16px 28px rgba(15, 23, 42, 0.18));
+  filter: none;
 }
 
 .ring text {
