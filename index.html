@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>元旦</title>
+  <title>倒计时</title>
   <link rel="stylesheet" href="./styles/main.css" />
 </head>
 <body>
   <div class="wrap">
     <header>
       <button id="btn-drawer" type="button" title="时间面板" aria-label="时间面板">☰</button>
-      <h1 id="pageTitle">元旦</h1>
+      <h1 id="pageTitle">倒计时</h1>
       <button id="btn-theme" title="主题/颜色">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22a7 7 0 0 1 0-14 5 5 0 0 1 5 5 2 2 0 0 0 2 2h1a2 2 0 0 1 0 4h-1a7 7 0 0 1-7 3Z" />
@@ -57,7 +57,7 @@
           <div>开始：<strong id="startLabel"></strong></div>
           <div>结束：<strong id="endLabel"></strong></div>
         </div>
-        <div class="badge" id="statusBadge">假期中</div>
+        <div class="badge" id="statusBadge">等待</div>
       </div>
 
       <section class="countdown" aria-live="polite">
@@ -106,7 +106,7 @@
                 </g>
                 <text id="ringText" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle">
                   <tspan id="ringPct" class="ring-percent" x="50%" dy="-.2em">0%</tspan>
-                  <tspan id="ringState" class="ring-state" x="50%" dy="1.6em">假期中</tspan>
+                  <tspan id="ringState" class="ring-state" x="50%" dy="1.6em">等待</tspan>
                 </text>
               </svg>
             </div>

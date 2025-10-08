@@ -8,7 +8,7 @@ export const SHANGHAI_OFFSET_MIN = 8 * 60;
 
 const pad = (value) => String(value).padStart(2, '0');
 
-const toTimestamp = (value) => (value instanceof Date ? value.getTime() : value);
+const toTimestamp = (value) => (value instanceof Date ? value.getTime() : Number(value));
 
 const shanghaiDate = (year, month, day, hours = 0, minutes = 0, seconds = 0) =>
   new Date(Date.UTC(year, month, day, hours, minutes, seconds) - SHANGHAI_OFFSET_MIN * MIN);
@@ -47,7 +47,8 @@ export function humanizeDuration(duration) {
 }
 
 export function startOfDay(date) {
-  const shanghaiNow = new Date(toTimestamp(date) + SHANGHAI_OFFSET_MIN * MIN);
+  const ms = toTimestamp(date) ?? Date.now();
+  const shanghaiNow = new Date(ms + SHANGHAI_OFFSET_MIN * MIN);
   const year = shanghaiNow.getUTCFullYear();
   const month = shanghaiNow.getUTCMonth();
   const day = shanghaiNow.getUTCDate();
@@ -55,18 +56,24 @@ export function startOfDay(date) {
 }
 
 export function addDays(date, amount) {
-  return new Date(toTimestamp(date) + amount * DAY);
+  const ms = toTimestamp(date) ?? Date.now();
+  return new Date(ms + amount * DAY);
 }
 
-export function nextSundayRange(now) {
-  const current = new Date(toTimestamp(now));
-  const shanghaiNow = new Date(current.getTime() + SHANGHAI_OFFSET_MIN * MIN);
-  const day = shanghaiNow.getUTCDay();
-  const startToday = startOfDay(current);
-  const daysUntil = (7 - day) % 7;
-  const start = daysUntil === 0 ? startToday : addDays(startToday, daysUntil);
-  const end = addDays(start, 1);
-  return { start, end };
+export function rangeStatus(now, range) {
+  const nowMs = toTimestamp(now) ?? Date.now();
+  const startMs = toTimestamp(range.start);
+  const endMs = toTimestamp(range.end);
+
+  if (nowMs < startMs) {
+    return { state: 'before', target: new Date(startMs) };
+  }
+
+  if (nowMs >= endMs) {
+    return { state: 'after', target: new Date(endMs) };
+  }
+
+  return { state: 'during', target: new Date(endMs) };
 }
 
 export function octRange(year) {
@@ -75,39 +82,36 @@ export function octRange(year) {
   return { start, end };
 }
 
-export function nextNewYearRange(now) {
-  const current = new Date(toTimestamp(now));
-  const shanghaiNow = new Date(current.getTime() + SHANGHAI_OFFSET_MIN * MIN);
-  const year = shanghaiNow.getUTCFullYear();
-  const thisNewYearStart = shanghaiDate(year, 0, 1);
-  const thisNewYearEnd = addDays(thisNewYearStart, 1);
+export function nextSundayRange(now) {
+  const currentStart = startOfDay(now);
+  const shanghaiStart = new Date(currentStart.getTime() + SHANGHAI_OFFSET_MIN * MIN);
+  const day = shanghaiStart.getUTCDay();
 
-  if (current.getTime() < thisNewYearStart.getTime()) {
-    return { start: thisNewYearStart, end: thisNewYearEnd };
+  if (day === 0) {
+    const start = currentStart;
+    return { start, end: addDays(start, 1) };
   }
 
-  if (current.getTime() < thisNewYearEnd.getTime()) {
-    return { start: thisNewYearStart, end: thisNewYearEnd };
-  }
-
-  const nextNewYearStart = shanghaiDate(year + 1, 0, 1);
-  return { start: nextNewYearStart, end: addDays(nextNewYearStart, 1) };
+  const daysUntil = (7 - day) % 7 || 7;
+  const start = addDays(currentStart, daysUntil);
+  return { start, end: addDays(start, 1) };
 }
 
-export function rangeStatus(now, start, end) {
-  const nowMs = toTimestamp(now);
-  const startMs = toTimestamp(start);
-  const endMs = toTimestamp(end);
-  const total = Math.max(0, endMs - startMs);
+export function newYearRange(now) {
+  const current = new Date(toTimestamp(now) ?? Date.now());
+  const shanghaiNow = new Date(current.getTime() + SHANGHAI_OFFSET_MIN * MIN);
+  const year = shanghaiNow.getUTCFullYear();
+  const startThisYear = shanghaiDate(year, 0, 1);
+  const endThisYear = addDays(startThisYear, 1);
 
-  if (nowMs < startMs) {
-    return { status: 'before', ratio: total ? Math.max(0, (nowMs - startMs) / total) : 0 };
+  if (current.getTime() < startThisYear.getTime()) {
+    return { start: startThisYear, end: endThisYear };
   }
 
-  if (nowMs >= endMs) {
-    return { status: 'after', ratio: 1 };
+  if (current.getTime() < endThisYear.getTime()) {
+    return { start: startThisYear, end: endThisYear };
   }
 
-  const ratio = total ? (nowMs - startMs) / total : 0;
-  return { status: 'during', ratio };
+  const nextStart = shanghaiDate(year + 1, 0, 1);
+  return { start: nextStart, end: addDays(nextStart, 1) };
 }
