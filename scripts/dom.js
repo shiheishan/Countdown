@@ -29,4 +29,16 @@ export const elements = {
     list: document.getElementById('themeList'),
   },
   pageTitle: document.getElementById('pageTitle'),
+  drawer: {
+    root: document.getElementById('drawer'),
+    backdrop: document.getElementById('backdrop'),
+    button: document.getElementById('btn-drawer'),
+  },
+  panel: {
+    nowClock: document.getElementById('nowClock'),
+    nyValue: document.getElementById('nyValue'),
+    nyDesc: document.getElementById('nyDesc'),
+    sunValue: document.getElementById('sunValue'),
+    sunDesc: document.getElementById('sunDesc'),
+  },
 };
