@@ -1,11 +1,6 @@
 import { elements } from './dom.js';
-import {
-  breakdownDuration,
-  formatShanghai,
-  nextSundayRange,
-  rangeStatus,
-} from '../utils/time.js';
-import { buildOct } from '../config/events.js';
+import { breakdownDuration, formatShanghai, rangeStatus } from '../utils/time.js';
+import { buildGoldenWeek, buildNextSunday, PANEL_COPY } from '../config/events.js';
 
 const pad = (value) => String(Math.max(0, value)).padStart(2, '0');
 
@@ -22,59 +17,48 @@ const setText = (element, text) => {
   element.textContent = text;
 };
 
-function renderSunday(now) {
-  const { panel } = elements;
-  if (!panel) return;
-
-  const { start, end } = nextSundayRange(now);
-  const { status } = rangeStatus(now, start, end);
-
-  if (status === 'during') {
-    const diff = end.getTime() - now.getTime();
-    setText(panel.sunValue, `放假中，距离结束还有 ${formatCountdown(diff)}`);
-    setText(panel.sunDesc, `结束：${toLabel(end)}`);
-    return;
+const getPanelMessage = (event, state) => {
+  const copy = PANEL_COPY[event.id];
+  const builder = copy && copy[state];
+  if (typeof builder === 'function') {
+    return builder(event);
   }
 
-  if (status === 'after') {
-    const diff = now.getTime() - end.getTime();
-    setText(panel.sunValue, `已经过去 ${formatCountdown(diff)}`);
-    setText(panel.sunDesc, `结束：${toLabel(end)}`);
-    return;
+  if (state === 'after') {
+    return `${event.title ?? ''}已结束`;
+  }
+  if (state === 'during') {
+    return `${event.title ?? ''}进行中`;
+  }
+  return `距离${event.title ?? ''}还有`;
+};
+
+const getPanelDesc = (event, state) => {
+  if (state === 'before') {
+    return `开始：${toLabel(event.start)}`;
+  }
+  return `结束：${toLabel(event.end)}`;
+};
+
+const describeEvent = (event, now) => {
+  const status = rangeStatus(now, event);
+  const state = status.state;
+
+  let diff = 0;
+  if (state === 'before') {
+    diff = event.start.getTime() - now.getTime();
+  } else if (state === 'during') {
+    diff = event.end.getTime() - now.getTime();
+  } else {
+    diff = now.getTime() - event.end.getTime();
   }
 
-  const diff = start.getTime() - now.getTime();
-  setText(panel.sunValue, `还有 ${formatCountdown(diff)}`);
-  setText(panel.sunDesc, `下次周日：${toLabel(start)}`);
-}
+  const message = getPanelMessage(event, state);
+  const value = `${message} ${formatCountdown(diff)}`;
+  const desc = getPanelDesc(event, state);
 
-function renderOct(now) {
-  const { panel } = elements;
-  if (!panel) return;
-
-  const event = buildOct(now);
-  const start = new Date(event.start);
-  const end = new Date(event.end);
-  const { status } = rangeStatus(now, start, end);
-
-  if (status === 'during') {
-    const diff = end.getTime() - now.getTime();
-    setText(panel.octValue, `放假中，距离结束还有 ${formatCountdown(diff)}`);
-    setText(panel.octDesc, `结束：${toLabel(end)}`);
-    return;
-  }
-
-  if (status === 'after') {
-    const diff = now.getTime() - end.getTime();
-    setText(panel.octValue, `已经过去 ${formatCountdown(diff)}`);
-    setText(panel.octDesc, `结束：${toLabel(end)}`);
-    return;
-  }
-
-  const diff = start.getTime() - now.getTime();
-  setText(panel.octValue, `还有 ${formatCountdown(diff)}`);
-  setText(panel.octDesc, `开始：${toLabel(start)}`);
-}
+  return { value, desc };
+};
 
 export function initDrawer() {
   const { drawer } = elements;
@@ -141,17 +125,17 @@ export function initDrawer() {
   });
 }
 
-export function startPanel() {
-  const render = () => {
-    const now = new Date();
-    renderSunday(now);
-    renderOct(now);
-  };
+export function renderPanel(now) {
+  const { panel } = elements;
+  if (!panel) return;
 
-  render();
-  const kick = 1000 - (Date.now() % 1000);
-  window.setTimeout(() => {
-    render();
-    window.setInterval(render, 1000);
-  }, kick);
+  const sundayEvent = buildNextSunday(now);
+  const sunday = describeEvent(sundayEvent, now);
+  setText(panel.sunValue, sunday.value);
+  setText(panel.sunDesc, sunday.desc);
+
+  const goldenEvent = buildGoldenWeek(now);
+  const golden = describeEvent(goldenEvent, now);
+  setText(panel.octValue, golden.value);
+  setText(panel.octDesc, golden.desc);
 }
