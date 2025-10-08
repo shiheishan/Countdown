@@ -61,11 +61,15 @@ export function bjtAddDaysUTC(date, n) {
   return bjtLocalToUTC(p.y, p.M, p.d + n);
 }
 
+const GOLDEN_WEEK_YEAR = 2025;
+const GOLDEN_WEEK_START_MS = bjtLocalToUTC(GOLDEN_WEEK_YEAR, 10, 1).getTime();
+const GOLDEN_WEEK_END_MS = bjtLocalToUTC(GOLDEN_WEEK_YEAR, 10, 8, 23, 59, 59).getTime(); // 结束于 2025-10-08 23:59:59 BJT
+
 export function goldenWeekRangeBJT(now = new Date()) {
-  const targetYear = 2025;
+  void now;
   return {
-    start: bjtLocalToUTC(targetYear, 10, 1),
-    end: bjtLocalToUTC(targetYear, 10, 8, 23, 59, 59),
+    start: new Date(GOLDEN_WEEK_START_MS),
+    end: new Date(GOLDEN_WEEK_END_MS),
   };
 }
 
