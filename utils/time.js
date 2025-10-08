@@ -62,8 +62,11 @@ export function bjtAddDaysUTC(date, n) {
 }
 
 export function goldenWeekRangeBJT(now = new Date()) {
-  const y = bjtParts(now).y;
-  return { start: bjtLocalToUTC(y, 10, 1), end: bjtLocalToUTC(y, 10, 8) };
+  const targetYear = 2025;
+  return {
+    start: bjtLocalToUTC(targetYear, 10, 1),
+    end: bjtLocalToUTC(targetYear, 10, 8, 23, 59, 59),
+  };
 }
 
 export function newYearRangeBJT(now = new Date()) {
