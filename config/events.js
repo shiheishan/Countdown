@@ -1,29 +1,21 @@
-import { MIN, SHANGHAI_OFFSET_MIN, goldenWeekRange, newYearRange } from '../utils/time.js';
-
-const toTimestamp = (value) => (value instanceof Date ? value.getTime() : Number(value) || Date.now());
-
-const getShanghaiYear = (now) => {
-  const timestamp = toTimestamp(now);
-  return new Date(timestamp + SHANGHAI_OFFSET_MIN * MIN).getUTCFullYear();
-};
+import { goldenWeekRangeBJT, newYearRangeBJT } from '../utils/time.js';
 
 export function buildGoldenWeek(now = new Date()) {
-  const year = getShanghaiYear(now);
-  const { start, end } = goldenWeekRange(year);
+  const range = goldenWeekRangeBJT(now);
   return {
     id: 'golden-week',
     title: '国庆·中秋',
-    start,
-    end,
+    start: range.start,
+    end: range.end,
   };
 }
 
 export function buildNewYear(now = new Date()) {
-  const { start, end } = newYearRange(now);
+  const range = newYearRangeBJT(now);
   return {
     id: 'new-year',
     title: '元旦',
-    start,
-    end,
+    start: range.start,
+    end: range.end,
   };
 }

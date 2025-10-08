@@ -35,7 +35,10 @@ export const elements = {
     button: document.getElementById('btn-drawer'),
   },
   panel: {
+    nowClock: document.getElementById('nowClock'),
     nyValue: document.getElementById('nyValue'),
     nyDesc: document.getElementById('nyDesc'),
+    sunValue: document.getElementById('sunValue'),
+    sunDesc: document.getElementById('sunDesc'),
   },
 };
