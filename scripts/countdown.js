@@ -1,6 +1,5 @@
 import { elements } from './dom.js';
 import { breakdownDuration, humanizeDuration, formatShanghai, rangeStatus } from '../utils/time.js';
-import { HEADLINE_COPY } from '../config/events.js';
 
 const RADIUS = 52;
 const RING_LENGTH = 2 * Math.PI * RADIUS;
@@ -11,6 +10,12 @@ const STATE_BADGE_LABELS = {
   before: '等待',
   during: '进行中',
   after: '已结束',
+};
+
+const HOME_HEADLINES = {
+  before: '距离国庆·中秋还有',
+  during: '国庆·中秋假期中，距离结束还有',
+  after: '距离国庆·中秋结束已经过去',
 };
 
 let ringAnimationFrame = null;
@@ -171,20 +176,8 @@ function setRingProgress(ringElements, ratio, statusText) {
   ringAnimationFrame = requestAnimationFrame(step);
 }
 
-function getHeadline(event, state) {
-  const copy = HEADLINE_COPY[event.id];
-  const builder = copy && copy[state];
-  if (typeof builder === 'function') {
-    return builder(event);
-  }
-
-  if (state === 'after') {
-    return `${event.title ?? ''}已结束…`;
-  }
-  if (state === 'during') {
-    return `${event.title ?? ''}进行中…`;
-  }
-  return `距离${event.title ?? ''}还有…`;
+function getHeadline(state) {
+  return HOME_HEADLINES[state] ?? HOME_HEADLINES.before;
 }
 
 function ensureEvent(event) {
@@ -236,15 +229,8 @@ export function renderCountdown(event, now = new Date()) {
 
   const status = rangeStatus(current, { start: activeStart, end: activeEnd });
   const state = status.state;
-
-  let diffMs = 0;
-  if (state === 'before') {
-    diffMs = activeStart.getTime() - nowMs;
-  } else if (state === 'during') {
-    diffMs = activeEnd.getTime() - nowMs;
-  } else {
-    diffMs = nowMs - activeEnd.getTime();
-  }
+  const targetMs = status.target.getTime();
+  const diffMs = state === 'after' ? Math.max(0, nowMs - targetMs) : Math.max(0, targetMs - nowMs);
 
   const remainingParts = breakdownDuration(diffMs);
   setDigits(digits.days, 'days', remainingParts.d, 2);
@@ -252,23 +238,40 @@ export function renderCountdown(event, now = new Date()) {
   setDigits(digits.minutes, 'minutes', remainingParts.m, 2);
   setDigits(digits.seconds, 'seconds', remainingParts.s, 2);
 
-  const elapsed = nowMs - activeStart.getTime();
-  const remain = activeEnd.getTime() - nowMs;
-  const ratio = totalDuration > 0 ? (nowMs - activeStart.getTime()) / totalDuration : 0;
-  const safeRatio = clamp01(ratio);
+  const elapsedMs = Math.max(0, nowMs - activeStart.getTime());
+  const untilStartMs = Math.max(0, activeStart.getTime() - nowMs);
+  const remainMs = Math.max(0, activeEnd.getTime() - nowMs);
+  const rawRatio = status.ratio ?? 0;
+  const ratio = state === 'after' ? 1 : Math.min(1, Math.max(0, rawRatio));
 
   if (meta.fill) {
-    meta.fill.style.transform = `scaleX(${safeRatio})`;
+    meta.fill.style.transform = `scaleX(${ratio})`;
   }
   if (meta.pct) {
-    meta.pct.textContent = `${(Math.round(safeRatio * 1000) / 10).toFixed(1)}%`;
+    const percent = state === 'after' ? 1 : ratio;
+    meta.pct.textContent = `${(percent * 100).toFixed(1)}%`;
   }
+
   if (meta.elapsed) {
-    meta.elapsed.textContent = elapsed < 0 ? '未开始' : humanizeDuration(elapsed);
+    if (state === 'before') {
+      meta.elapsed.textContent = '未开始';
+    } else if (state === 'after') {
+      meta.elapsed.textContent = humanizeDuration(totalDuration);
+    } else {
+      meta.elapsed.textContent = humanizeDuration(elapsedMs);
+    }
   }
+
   if (meta.remain) {
-    meta.remain.textContent = remain < 0 ? '已结束' : humanizeDuration(remain);
+    if (state === 'after') {
+      meta.remain.textContent = '已结束';
+    } else if (state === 'before') {
+      meta.remain.textContent = humanizeDuration(untilStartMs);
+    } else {
+      meta.remain.textContent = humanizeDuration(remainMs);
+    }
   }
+
   if (meta.total) {
     meta.total.textContent = totalText;
   }
@@ -279,12 +282,14 @@ export function renderCountdown(event, now = new Date()) {
   }
   setRingProgress(ring, ratio, statusText);
 
-  const headline = getHeadline(event, state);
+  const headline = getHeadline(state);
   if (pageTitle) {
     pageTitle.textContent = headline;
   }
 
   if (activeTitle) {
-    document.title = `${activeTitle} · ${statusText}`;
+    document.title = `${headline} · ${activeTitle}`;
+  } else {
+    document.title = headline;
   }
 }

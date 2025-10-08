@@ -37,13 +37,15 @@ export function breakdownDuration(duration) {
 }
 
 export function humanizeDuration(duration) {
-  const { d, h, m, s } = breakdownDuration(duration);
-  const parts = [];
-  if (d) parts.push(`${d}天`);
-  if (h) parts.push(`${h}小时`);
-  if (m) parts.push(`${m}分钟`);
-  if (!d && !h) parts.push(`${s}秒`);
-  return parts.join(' ');
+  const safe = Math.max(0, duration);
+  const { d, h, m } = breakdownDuration(safe);
+  return `${d}天 ${pad(h)}小时 ${pad(m)}分钟`;
+}
+
+export function formatDuration(duration) {
+  const safe = Math.max(0, duration);
+  const { d, h, m, s } = breakdownDuration(safe);
+  return `${d} 天 ${pad(h)}:${pad(m)}:${pad(s)}`;
 }
 
 export function startOfDay(date) {
@@ -64,37 +66,25 @@ export function rangeStatus(now, range) {
   const nowMs = toTimestamp(now) ?? Date.now();
   const startMs = toTimestamp(range.start);
   const endMs = toTimestamp(range.end);
+  const total = Math.max(0, endMs - startMs);
+  const baseRatio = total > 0 ? (nowMs - startMs) / total : 0;
 
   if (nowMs < startMs) {
-    return { state: 'before', target: new Date(startMs) };
+    return { state: 'before', ratio: 0, target: new Date(startMs) };
   }
 
   if (nowMs >= endMs) {
-    return { state: 'after', target: new Date(endMs) };
+    return { state: 'after', ratio: 1, target: new Date(endMs) };
   }
 
-  return { state: 'during', target: new Date(endMs) };
+  const ratio = Math.min(1, Math.max(0, baseRatio));
+  return { state: 'during', ratio, target: new Date(endMs) };
 }
 
-export function octRange(year) {
+export function goldenWeekRange(year) {
   const start = shanghaiDate(year, 9, 1);
-  const end = shanghaiDate(year, 9, 8);
+  const end = shanghaiDate(year, 9, 8, 23, 59, 59);
   return { start, end };
-}
-
-export function nextSundayRange(now) {
-  const currentStart = startOfDay(now);
-  const shanghaiStart = new Date(currentStart.getTime() + SHANGHAI_OFFSET_MIN * MIN);
-  const day = shanghaiStart.getUTCDay();
-
-  if (day === 0) {
-    const start = currentStart;
-    return { start, end: addDays(start, 1) };
-  }
-
-  const daysUntil = (7 - day) % 7 || 7;
-  const start = addDays(currentStart, daysUntil);
-  return { start, end: addDays(start, 1) };
 }
 
 export function newYearRange(now) {
@@ -103,10 +93,6 @@ export function newYearRange(now) {
   const year = shanghaiNow.getUTCFullYear();
   const startThisYear = shanghaiDate(year, 0, 1);
   const endThisYear = addDays(startThisYear, 1);
-
-  if (current.getTime() < startThisYear.getTime()) {
-    return { start: startThisYear, end: endThisYear };
-  }
 
   if (current.getTime() < endThisYear.getTime()) {
     return { start: startThisYear, end: endThisYear };
