@@ -62,6 +62,23 @@ export function addDays(date, amount) {
   return new Date(ms + amount * DAY);
 }
 
+export function nextSundayRange(now = new Date()) {
+  const current = new Date(toTimestamp(now) ?? Date.now());
+  const shanghaiNow = new Date(current.getTime() + SHANGHAI_OFFSET_MIN * MIN);
+  const dayOfWeek = shanghaiNow.getUTCDay();
+  const start = startOfDay(current);
+
+  if (dayOfWeek === 0) {
+    const end = addDays(start, 1);
+    return { state: 'during', start, end, target: end };
+  }
+
+  const daysUntilSunday = 7 - dayOfWeek;
+  const sundayStart = addDays(start, daysUntilSunday);
+  const sundayEnd = addDays(sundayStart, 1);
+  return { state: 'before', start: sundayStart, end: sundayEnd, target: sundayStart };
+}
+
 export function rangeStatus(now, range) {
   const nowMs = toTimestamp(now) ?? Date.now();
   const startMs = toTimestamp(range.start);
