@@ -10,15 +10,20 @@
   <div class="wrap">
     <header>
       <h1 id="pageTitle">国庆·中秋</h1>
-      <button id="btn-theme" title="主题/颜色">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22a7 7 0 0 1 0-14 5 5 0 0 1 5 5 2 2 0 0 0 2 2h1a2 2 0 0 1 0 4h-1a7 7 0 0 1-7 3Z" />
-          <circle cx="6.5" cy="12.5" r="1.5" />
-          <circle cx="9.5" cy="7.5" r="1.5" />
-          <circle cx="14.5" cy="7.5" r="1.5" />
-          <circle cx="17.5" cy="12.5" r="1.5" />
-        </svg>
-        <span class="theme-label">主题</span>
+      <button id="btn-theme" class="icon-btn" type="button" title="主题/颜色">
+        <span class="icon-btn__back"></span>
+        <span class="icon-btn__front">
+          <span class="icon-btn__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22a7 7 0 0 1 0-14 5 5 0 0 1 5 5 2 2 0 0 0 2 2h1a2 2 0 0 1 0 4h-1a7 7 0 0 1-7 3Z" />
+              <circle cx="6.5" cy="12.5" r="1.5" />
+              <circle cx="9.5" cy="7.5" r="1.5" />
+              <circle cx="14.5" cy="7.5" r="1.5" />
+              <circle cx="17.5" cy="12.5" r="1.5" />
+            </svg>
+          </span>
+        </span>
+        <span class="icon-btn__label">主题</span>
       </button>
       <div class="popover" id="pop" role="listbox" aria-label="选择主题">
         <div class="theme-list" id="themeList"></div>
