@@ -8,6 +8,15 @@ const getShanghaiYear = (now) => {
 };
 
 export function buildGoldenWeek(now = new Date()) {
+  const nowMs = toTimestamp(now);
+  const year = Math.max(2025, getShanghaiYear(now));
+  let { start, end } = goldenWeekRange(year);
+
+  if (nowMs > end.getTime()) {
+    const next = goldenWeekRange(year + 1);
+    start = next.start;
+    end = next.end;
+  }
   const year = getShanghaiYear(now);
   const { start, end } = goldenWeekRange(year);
   return {

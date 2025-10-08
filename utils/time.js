@@ -83,7 +83,7 @@ export function rangeStatus(now, range) {
 
 export function goldenWeekRange(year) {
   const start = shanghaiDate(year, 9, 1);
-  const end = shanghaiDate(year, 9, 8);
+  const end = shanghaiDate(year, 9, 8, 23, 59, 59);
   return { start, end };
 }
 
