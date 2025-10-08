@@ -292,7 +292,7 @@ export function renderCountdown(event, now = new Date()) {
     pageTitle.textContent = headline;
   }
 
-  if (activeTitle) {
+  if (activeTitle && activeTitle.trim() && activeTitle.trim() !== headline.trim()) {
     document.title = `${headline} · ${activeTitle}`;
   } else {
     document.title = headline;
