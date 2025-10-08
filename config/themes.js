@@ -5,4 +5,4 @@ export const THEMES = [
   { id: 'ink-hill', name: '墨兰远山', bg: ['#eef1f0', '#d5dbd9', '#bcc6c2'], acc: ['#9aa7a2', '#6a7f78'], accent: '#556963' },
 ];
 
-export const DEFAULT_THEME_ID = THEMES[0].id;
+export const DEFAULT_THEME_ID = 'sage';
