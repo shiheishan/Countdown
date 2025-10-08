@@ -35,9 +35,7 @@ export const elements = {
     button: document.getElementById('btn-drawer'),
   },
   panel: {
-    sunValue: document.getElementById('sunValue'),
-    sunDesc: document.getElementById('sunDesc'),
-    octValue: document.getElementById('octValue'),
-    octDesc: document.getElementById('octDesc'),
+    nyValue: document.getElementById('nyValue'),
+    nyDesc: document.getElementById('nyDesc'),
   },
 };
