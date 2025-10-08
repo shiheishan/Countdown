@@ -225,7 +225,7 @@ export function renderCountdown(event, now = new Date()) {
 
   const current = now instanceof Date ? now : new Date(now);
   const nowMs = current.getTime();
-  const { digits, meta, statusBadge, ring, pageTitle } = elements;
+  const { digits, meta, statusPill, ring, pageTitle } = elements;
 
   const status = rangeStatus(current, { start: activeStart, end: activeEnd });
   const state = status.state;
@@ -277,8 +277,8 @@ export function renderCountdown(event, now = new Date()) {
   }
 
   const statusText = STATE_BADGE_LABELS[state] ?? STATE_BADGE_LABELS.before;
-  if (statusBadge) {
-    statusBadge.textContent = statusText;
+  if (statusPill) {
+    statusPill.textContent = statusText;
   }
   setRingProgress(ring, ratio, statusText);
 

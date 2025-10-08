@@ -177,23 +177,10 @@ header h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 10px;
-  flex-wrap: nowrap;
-  overflow: hidden;
+  margin-bottom: 12px;
 }
 
-.range {
-  color: var(--muted);
-  font-size: 14px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 16px;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.badge {
+.status-pill {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
@@ -293,7 +280,7 @@ body.bg-fading,
 body.bg-fading .card,
 body.bg-fading .unit,
 body.bg-fading .panel,
-body.bg-fading .badge,
+body.bg-fading .status-pill,
 body.bg-fading .preview,
 body.bg-fading .bar,
 body.bg-fading .fill {
@@ -304,8 +291,11 @@ body.bg-fading .fill {
 /* 如果你手机上依旧稳定，不禁用也行 */
 /* （本包已去掉这段，避免误杀阴影） */
 
+.topline .meta {
+  margin: 0;
+}
+
 .meta {
-  margin-top: 10px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -317,6 +307,10 @@ body.bg-fading .fill {
 
 .meta strong {
   color: inherit;
+}
+
+.progress .meta {
+  margin-top: 10px;
 }
 
 .grid {
@@ -673,7 +667,7 @@ body,
 .card,
 .unit,
 .panel,
-.badge,
+.status-pill,
 .preview,
 .bar,
 .fill {
@@ -745,16 +739,10 @@ body,
   }
 
   .topline {
-    gap: 28px;
-    margin-bottom: 18px;
+    margin-bottom: 20px;
   }
 
-  .range {
-    font-size: 15px;
-    gap: 12px 22px;
-  }
-
-  .badge {
+  .status-pill {
     font-size: 15px;
     padding: 8px 18px;
   }
@@ -786,6 +774,10 @@ body,
   .meta {
     font-size: 14px;
     gap: 14px 28px;
+  }
+
+  .progress .meta {
+    margin-top: 14px;
   }
 
   .grid {

@@ -1,5 +1,5 @@
 import { elements } from './dom.js';
-import { formatDuration, formatShanghai, rangeStatus } from '../utils/time.js';
+import { formatDuration, formatShanghai, nextSundayRange, rangeStatus } from '../utils/time.js';
 import { buildNewYear } from '../config/events.js';
 
 const NY_MESSAGES = {
@@ -80,7 +80,7 @@ export function initDrawer() {
   });
 }
 
-export function renderSidebar(now) {
+export function renderNewYearCard(now) {
   const { panel } = elements;
   if (!panel) return;
 
@@ -97,4 +97,28 @@ export function renderSidebar(now) {
   const descPrefix = status.state === 'before' ? '开始' : '结束';
   const descDate = status.state === 'before' ? event.start : event.end;
   setText(panel.nyDesc, `${descPrefix}：${toLabel(descDate)}`);
+}
+
+export function renderSunday(now) {
+  const { panel } = elements;
+  if (!panel) return;
+
+  const current = now instanceof Date ? now : new Date(now);
+  const range = nextSundayRange(current);
+
+  if (range.state === 'during') {
+    const remainMs = Math.max(0, range.end.getTime() - current.getTime());
+    setText(panel.sunValue, `放假中（周日），距离结束还有 ${formatDuration(remainMs)}`);
+    setText(panel.sunDesc, `结束：${toLabel(range.end)}`);
+    return;
+  }
+
+  const untilStart = Math.max(0, range.start.getTime() - current.getTime());
+  setText(panel.sunValue, `距离下次周日还有 ${formatDuration(untilStart)}`);
+  setText(panel.sunDesc, `开始：${toLabel(range.start)}`);
+}
+
+export function renderSidebar(now) {
+  renderNewYearCard(now);
+  renderSunday(now);
 }

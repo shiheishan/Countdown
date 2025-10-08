@@ -16,7 +16,7 @@ export const elements = {
     start: document.getElementById('startLabel'),
     end: document.getElementById('endLabel'),
   },
-  statusBadge: document.getElementById('statusBadge'),
+  statusPill: document.getElementById('statusPill'),
   ring: {
     arc: document.getElementById('arc'),
     head: document.getElementById('arcHead'),
@@ -34,8 +34,13 @@ export const elements = {
     backdrop: document.getElementById('backdrop'),
     button: document.getElementById('btn-drawer'),
   },
+  clock: {
+    now: document.getElementById('nowClock'),
+  },
   panel: {
     nyValue: document.getElementById('nyValue'),
     nyDesc: document.getElementById('nyDesc'),
+    sunValue: document.getElementById('sunValue'),
+    sunDesc: document.getElementById('sunDesc'),
   },
 };

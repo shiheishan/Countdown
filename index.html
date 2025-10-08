@@ -33,23 +33,27 @@
       </div>
       <div class="drawer-body">
         <section class="drawer-section">
-          <h3 class="drawer-group">节日</h3>
-          <div class="panel-card">
+          <h3 class="drawer-group">常驻</h3>
+          <section class="panel-card" id="cardNewYear" aria-live="polite">
             <div class="panel-card-title">元旦</div>
-            <div id="nyValue" class="panel-card-value" aria-live="polite">--</div>
+            <div id="nyValue" class="panel-card-value">--</div>
             <div id="nyDesc" class="panel-card-desc">--</div>
-          </div>
+          </section>
+          <section class="panel-card" id="cardSunday" aria-live="polite">
+            <div class="card-title panel-card-title">下次周日</div>
+            <div class="card-main panel-card-value" id="sunValue">—</div>
+            <div class="card-sub panel-card-desc" id="sunDesc">—</div>
+          </section>
         </section>
       </div>
     </aside>
 
     <main class="card">
       <div class="topline">
-        <div class="range">
-          <div>开始：<strong id="startLabel"></strong></div>
-          <div>结束：<strong id="endLabel"></strong></div>
+        <div class="meta">
+          <span>当前：</span><span id="nowClock">--</span>
+          <span class="status-pill" id="statusPill">等待</span>
         </div>
-        <div class="badge" id="statusBadge">等待</div>
       </div>
 
       <section class="countdown" aria-live="polite">
@@ -62,10 +66,12 @@
       <section class="progress">
         <div class="bar" aria-label="假期进度"><div class="fill" id="fill"></div></div>
         <div class="meta">
+          <div>开始：<strong id="startLabel"></strong></div>
+          <div>结束：<strong id="endLabel"></strong></div>
+          <div>总时长：<strong id="total">--</strong></div>
           <div>已过：<strong id="pct">0%</strong></div>
           <div>已用时：<strong id="elapsed">--</strong></div>
           <div>剩余：<strong id="remain">--</strong></div>
-          <div>总时长：<strong id="total">--</strong></div>
         </div>
       </section>
 
