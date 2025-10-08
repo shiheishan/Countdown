@@ -14,7 +14,7 @@ const STATE_BADGE_LABELS = {
 
 const HOME_HEADLINES = {
   before: '距离国庆·中秋还有',
-  during: '国庆·中秋假期中，距离结束还有',
+  during: '国庆·中秋',
   after: '距离国庆·中秋结束已经过去',
 };
 
@@ -292,7 +292,7 @@ export function renderCountdown(event, now = new Date()) {
     pageTitle.textContent = headline;
   }
 
-  if (activeTitle) {
+  if (activeTitle && activeTitle.trim() && activeTitle.trim() !== headline.trim()) {
     document.title = `${headline} · ${activeTitle}`;
   } else {
     document.title = headline;
