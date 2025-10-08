@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>国庆·中秋</title>
+  <title>元旦</title>
   <link rel="stylesheet" href="./styles/main.css" />
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1 id="pageTitle">国庆·中秋</h1>
+      <button id="btn-drawer" type="button" title="时间面板" aria-label="时间面板">☰</button>
+      <h1 id="pageTitle">元旦</h1>
       <button id="btn-theme" title="主题/颜色">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22a7 7 0 0 1 0-14 5 5 0 0 1 5 5 2 2 0 0 0 2 2h1a2 2 0 0 1 0 4h-1a7 7 0 0 1-7 3Z" />
@@ -24,6 +25,31 @@
         <div class="theme-list" id="themeList"></div>
       </div>
     </header>
+
+    <div id="backdrop" class="backdrop" hidden></div>
+    <aside id="drawer" class="drawer" aria-label="时间面板" hidden>
+      <div class="drawer-header">
+        <h2>时间面板</h2>
+      </div>
+      <div class="drawer-body">
+        <section class="drawer-section">
+          <h3 class="drawer-group">常驻</h3>
+          <div class="panel-card">
+            <div class="panel-card-title">下次周日</div>
+            <div id="sunValue" class="panel-card-value" aria-live="polite">--</div>
+            <div id="sunDesc" class="panel-card-desc">--</div>
+          </div>
+        </section>
+        <section class="drawer-section">
+          <h3 class="drawer-group">节日</h3>
+          <div class="panel-card">
+            <div class="panel-card-title">国庆·中秋</div>
+            <div id="octValue" class="panel-card-value" aria-live="polite">--</div>
+            <div id="octDesc" class="panel-card-desc">--</div>
+          </div>
+        </section>
+      </div>
+    </aside>
 
     <main class="card">
       <div class="topline">
