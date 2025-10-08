@@ -4,24 +4,97 @@ export const MIN = 60 * SEC;
 export const HOUR = 60 * MIN;
 export const DAY = 24 * HOUR;
 
-export const SHANGHAI_OFFSET_MIN = 8 * 60;
+export const BJT_TZ = 'Asia/Shanghai';
+export const BJT_OFFSET_MS = 8 * 60 * 60 * 1000;
 
 const pad = (value) => String(value).padStart(2, '0');
 
-const toTimestamp = (value) => (value instanceof Date ? value.getTime() : Number(value));
+const bjtFormatter = new Intl.DateTimeFormat('zh-CN', {
+  timeZone: BJT_TZ,
+  hourCycle: 'h23',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+});
 
-const shanghaiDate = (year, month, day, hours = 0, minutes = 0, seconds = 0) =>
-  new Date(Date.UTC(year, month, day, hours, minutes, seconds) - SHANGHAI_OFFSET_MIN * MIN);
+export function formatBJT(date) {
+  const safeDate = date instanceof Date ? date : new Date(Number(date) || Date.now());
+  const parts = bjtFormatter.formatToParts(safeDate);
+  const bucket = { year: '0000', month: '00', day: '00', hour: '00', minute: '00', second: '00' };
+  parts.forEach((part) => {
+    if (part.type in bucket) {
+      bucket[part.type] = part.value;
+    }
+  });
+  return `${bucket.year}-${bucket.month}-${bucket.day} ${bucket.hour}:${bucket.minute}:${bucket.second}`;
+}
 
-export function formatShanghai(date) {
-  const offsetDate = new Date(date.getTime() + SHANGHAI_OFFSET_MIN * MIN);
-  const year = offsetDate.getUTCFullYear();
-  const month = pad(offsetDate.getUTCMonth() + 1);
-  const day = pad(offsetDate.getUTCDate());
-  const hours = pad(offsetDate.getUTCHours());
-  const minutes = pad(offsetDate.getUTCMinutes());
-  const seconds = pad(offsetDate.getUTCSeconds());
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+// ---- 北京时间工具（UTC+08:00）----
+export function bjtParts(date = new Date()) {
+  const source = date instanceof Date ? date : new Date(Number(date) || Date.now());
+  const t = new Date(source.getTime() + BJT_OFFSET_MS);
+  return {
+    y: t.getUTCFullYear(),
+    M: t.getUTCMonth() + 1,
+    d: t.getUTCDate(),
+    h: t.getUTCHours(),
+    m: t.getUTCMinutes(),
+    s: t.getUTCSeconds(),
+    dow: t.getUTCDay(),
+  };
+}
+
+export function bjtLocalToUTC(y, M, d, hh = 0, mm = 0, ss = 0, ms = 0) {
+  return new Date(Date.UTC(y, M - 1, d, hh, mm, ss, ms) - BJT_OFFSET_MS);
+}
+
+export function bjtStartOfDayUTC(date = new Date()) {
+  const p = bjtParts(date);
+  return bjtLocalToUTC(p.y, p.M, p.d);
+}
+
+export function bjtAddDaysUTC(date, n) {
+  const p = bjtParts(date);
+  return bjtLocalToUTC(p.y, p.M, p.d + n);
+}
+
+export function goldenWeekRangeBJT(now = new Date()) {
+  const y = bjtParts(now).y;
+  return { start: bjtLocalToUTC(y, 10, 1), end: bjtLocalToUTC(y, 10, 8) };
+}
+
+export function newYearRangeBJT(now = new Date()) {
+  const y = bjtParts(now).y;
+  const sThis = bjtLocalToUTC(y, 1, 1);
+  const eThis = bjtLocalToUTC(y, 1, 2);
+  const source = now instanceof Date ? now : new Date(Number(now) || Date.now());
+  if (source < eThis) return { start: sThis, end: eThis };
+  const sNext = bjtLocalToUTC(y + 1, 1, 1);
+  const eNext = bjtLocalToUTC(y + 1, 1, 2);
+  return { start: sNext, end: eNext };
+}
+
+export function nextSundayRangeBJT(now = new Date()) {
+  const source = now instanceof Date ? now : new Date(Number(now) || Date.now());
+  const dow = bjtParts(source).dow;
+  if (dow === 0) {
+    const start = bjtStartOfDayUTC(source);
+    const end = bjtAddDaysUTC(start, 1);
+    return { state: 'during', start, end, target: end };
+  }
+  const start = bjtAddDaysUTC(bjtStartOfDayUTC(source), 7 - dow);
+  const end = bjtAddDaysUTC(start, 1);
+  return { state: 'before', start, end, target: start };
+}
+
+export function rangeStatus(now, { start, end }) {
+  const current = now instanceof Date ? now : new Date(Number(now) || Date.now());
+  if (current < start) return { state: 'before', target: start };
+  if (current < end) return { state: 'during', target: end };
+  return { state: 'after', target: end };
 }
 
 export function breakdownDuration(duration) {
@@ -46,58 +119,4 @@ export function formatDuration(duration) {
   const safe = Math.max(0, duration);
   const { d, h, m, s } = breakdownDuration(safe);
   return `${d} 天 ${pad(h)}:${pad(m)}:${pad(s)}`;
-}
-
-export function startOfDay(date) {
-  const ms = toTimestamp(date) ?? Date.now();
-  const shanghaiNow = new Date(ms + SHANGHAI_OFFSET_MIN * MIN);
-  const year = shanghaiNow.getUTCFullYear();
-  const month = shanghaiNow.getUTCMonth();
-  const day = shanghaiNow.getUTCDate();
-  return shanghaiDate(year, month, day);
-}
-
-export function addDays(date, amount) {
-  const ms = toTimestamp(date) ?? Date.now();
-  return new Date(ms + amount * DAY);
-}
-
-export function rangeStatus(now, range) {
-  const nowMs = toTimestamp(now) ?? Date.now();
-  const startMs = toTimestamp(range.start);
-  const endMs = toTimestamp(range.end);
-  const total = Math.max(0, endMs - startMs);
-  const baseRatio = total > 0 ? (nowMs - startMs) / total : 0;
-
-  if (nowMs < startMs) {
-    return { state: 'before', ratio: 0, target: new Date(startMs) };
-  }
-
-  if (nowMs >= endMs) {
-    return { state: 'after', ratio: 1, target: new Date(endMs) };
-  }
-
-  const ratio = Math.min(1, Math.max(0, baseRatio));
-  return { state: 'during', ratio, target: new Date(endMs) };
-}
-
-export function goldenWeekRange(year) {
-  const start = shanghaiDate(year, 9, 1);
-  const end = shanghaiDate(year, 9, 8);
-  return { start, end };
-}
-
-export function newYearRange(now) {
-  const current = new Date(toTimestamp(now) ?? Date.now());
-  const shanghaiNow = new Date(current.getTime() + SHANGHAI_OFFSET_MIN * MIN);
-  const year = shanghaiNow.getUTCFullYear();
-  const startThisYear = shanghaiDate(year, 0, 1);
-  const endThisYear = addDays(startThisYear, 1);
-
-  if (current.getTime() < endThisYear.getTime()) {
-    return { start: startThisYear, end: endThisYear };
-  }
-
-  const nextStart = shanghaiDate(year + 1, 0, 1);
-  return { start: nextStart, end: addDays(nextStart, 1) };
 }

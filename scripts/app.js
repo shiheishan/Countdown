@@ -1,11 +1,12 @@
 import { initThemePicker } from './theme.js';
 import { renderCountdown } from './countdown.js';
 import { buildGoldenWeek } from '../config/events.js';
-import { initDrawer, renderSidebar } from './sidebar.js';
+import { initDrawer, renderSidebar, updateClock } from './sidebar.js';
 
 function createTick() {
   return () => {
     const now = new Date();
+    updateClock(now);
     const event = buildGoldenWeek(now);
     renderCountdown(event, now);
     renderSidebar(now);

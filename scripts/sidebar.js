@@ -1,6 +1,11 @@
 import { elements } from './dom.js';
-import { formatDuration, formatShanghai, rangeStatus } from '../utils/time.js';
-import { buildNewYear } from '../config/events.js';
+import {
+  formatDuration,
+  formatBJT,
+  rangeStatus,
+  newYearRangeBJT,
+  nextSundayRangeBJT,
+} from '../utils/time.js';
 
 const NY_MESSAGES = {
   before: '距离元旦还有',
@@ -13,7 +18,13 @@ const setText = (element, text) => {
   element.textContent = text;
 };
 
-const toLabel = (date) => formatShanghai(date).slice(0, 16);
+const formatLabel = (date) => formatBJT(date);
+
+export function updateClock(now = new Date()) {
+  const { panel } = elements;
+  if (!panel || !panel.nowClock) return;
+  setText(panel.nowClock, `当前：${formatLabel(now)}`);
+}
 
 export function initDrawer() {
   const { drawer } = elements;
@@ -84,17 +95,37 @@ export function renderSidebar(now) {
   const { panel } = elements;
   if (!panel) return;
 
-  const event = buildNewYear(now);
-  const status = rangeStatus(now, event);
   const current = now instanceof Date ? now : new Date(now);
   const nowMs = current.getTime();
-  const targetMs = status.target.getTime();
-  const diffMs = status.state === 'after' ? Math.max(0, nowMs - targetMs) : Math.max(0, targetMs - nowMs);
-  const message = NY_MESSAGES[status.state] ?? NY_MESSAGES.before;
 
-  setText(panel.nyValue, `${message} ${formatDuration(diffMs)}`);
+  const nyRange = newYearRangeBJT(current);
+  const nyStatus = rangeStatus(current, nyRange);
+  let nyDiff = 0;
+  if (nyStatus.state === 'before') {
+    nyDiff = Math.max(0, nyRange.start.getTime() - nowMs);
+  } else if (nyStatus.state === 'during') {
+    nyDiff = Math.max(0, nyRange.end.getTime() - nowMs);
+  } else {
+    nyDiff = Math.max(0, nowMs - nyRange.end.getTime());
+  }
+  const nyMessage = NY_MESSAGES[nyStatus.state] ?? NY_MESSAGES.before;
 
-  const descPrefix = status.state === 'before' ? '开始' : '结束';
-  const descDate = status.state === 'before' ? event.start : event.end;
-  setText(panel.nyDesc, `${descPrefix}：${toLabel(descDate)}`);
+  setText(panel.nyValue, `${nyMessage} ${formatDuration(nyDiff)}`);
+
+  const nyDescPrefix = nyStatus.state === 'before' ? '开始' : '结束';
+  const nyDescDate = nyStatus.state === 'before' ? nyRange.start : nyRange.end;
+  setText(panel.nyDesc, `${nyDescPrefix}：${formatLabel(nyDescDate)}`);
+
+  if (panel.sunValue && panel.sunDesc) {
+    const sundayRange = nextSundayRangeBJT(current);
+    if (sundayRange.state === 'during') {
+      const diff = Math.max(0, sundayRange.end.getTime() - nowMs);
+      setText(panel.sunValue, `放假中（周日），距离结束还有 ${formatDuration(diff)}`);
+      setText(panel.sunDesc, `结束：${formatLabel(sundayRange.end)}`);
+    } else {
+      const diff = Math.max(0, sundayRange.target.getTime() - nowMs);
+      setText(panel.sunValue, `距离下次周日还有 ${formatDuration(diff)}`);
+      setText(panel.sunDesc, `开始：${formatLabel(sundayRange.start)}`);
+    }
+  }
 }

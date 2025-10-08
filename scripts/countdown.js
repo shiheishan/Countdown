@@ -1,5 +1,5 @@
 import { elements } from './dom.js';
-import { breakdownDuration, humanizeDuration, formatShanghai, rangeStatus } from '../utils/time.js';
+import { breakdownDuration, humanizeDuration, formatBJT, rangeStatus } from '../utils/time.js';
 
 const RADIUS = 52;
 const RING_LENGTH = 2 * Math.PI * RADIUS;
@@ -208,10 +208,10 @@ function ensureEvent(event) {
   });
 
   if (labels.start) {
-    labels.start.textContent = formatShanghai(activeStart);
+    labels.start.textContent = formatBJT(activeStart);
   }
   if (labels.end) {
-    labels.end.textContent = formatShanghai(activeEnd);
+    labels.end.textContent = formatBJT(activeEnd);
   }
   if (meta.total) {
     meta.total.textContent = totalText;
@@ -241,8 +241,13 @@ export function renderCountdown(event, now = new Date()) {
   const elapsedMs = Math.max(0, nowMs - activeStart.getTime());
   const untilStartMs = Math.max(0, activeStart.getTime() - nowMs);
   const remainMs = Math.max(0, activeEnd.getTime() - nowMs);
-  const rawRatio = status.ratio ?? 0;
-  const ratio = state === 'after' ? 1 : Math.min(1, Math.max(0, rawRatio));
+  const totalMs = Math.max(0, activeEnd.getTime() - activeStart.getTime());
+  let ratio = 0;
+  if (state === 'after') {
+    ratio = 1;
+  } else if (state === 'during' && totalMs > 0) {
+    ratio = Math.min(1, Math.max(0, elapsedMs / totalMs));
+  }
 
   if (meta.fill) {
     meta.fill.style.transform = `scaleX(${ratio})`;
