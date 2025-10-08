@@ -17,6 +17,8 @@ export function buildGoldenWeek(now = new Date()) {
     start = next.start;
     end = next.end;
   }
+  const year = getShanghaiYear(now);
+  const { start, end } = goldenWeekRange(year);
   return {
     id: 'golden-week',
     title: '国庆·中秋',
