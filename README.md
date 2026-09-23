@@ -2,7 +2,7 @@
 
 静态节假日倒计时页面，模块化的 HTML / CSS / JS 结构，无需构建。
 
-页面设计来自 Claude Design：宽屏为「1b 数字为主」，640px 以下为手机版「2f 自适应」（天数为个位数时放大并伸出左边缘，多位数时按位数缩放；右侧竖向进度）。两种布局共用同一份 HTML，由 `styles/main.css` 末尾的媒体查询切换。
+页面设计来自 Claude Design：宽屏为「3a 网页版」（以 1920×1080 为基准，按窗口宽高中较小的比例整体缩放），640px 以下为手机版「2f 自适应」（天数为个位数时放大并伸出左边缘，多位数时按位数缩放；右侧竖向进度）。两种布局共用同一份 HTML，由 `styles/main.css` 末尾的媒体查询切换。
 
 ## 目录结构
 
@@ -13,7 +13,7 @@
 │   ├── events.js       # 节假日数据源、区间解析与主页活动选择
 │   └── themes.js       # 主题配色列表
 ├── fonts               # 本地托管的字体（可变字体 woff2）及 OFL 许可
-├── index.html          # 页面结构
+├── index.html          # 页面结构（含资源版本号，由 tools/ 脚本生成）
 ├── scripts
 │   ├── app.js          # 应用入口：加载节假日并每秒刷新
 │   ├── countdown.js    # 标题、倒计时数字、日期与进度
@@ -23,6 +23,8 @@
 │   └── theme.js        # 主题色点与流动背景
 ├── styles
 │   └── main.css        # 页面样式
+├── tools
+│   └── version-assets.mjs  # 给资源地址加内容哈希版本号
 └── utils
     └── time.js         # 北京时间工具函数
 ```
@@ -56,6 +58,16 @@
 
 - **Noto Serif SC**：正文与标题。为控制体积只包含页面会出现的字符（约 410 个）。**新增或修改页面上的中文文案后需要重新生成**，否则新字会回退到系统字体。重新生成时，收集 `index.html`、`scripts/`、`config/`、`utils/`、`styles/` 中的全部字符（CSS 里的「至」「—」也会显示在页面上），通过 `https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600&text=<字符>` 取得子集文件，覆盖 `fonts/noto-serif-sc.woff2`。
 - **Cormorant Garamond**：倒计时数字（latin 子集，含等宽数字 `tnum` 与齐线数字 `lnum` 特性）。
+
+## 发布前：更新资源版本号
+
+改动了 CSS、JS 或字体后，提交前运行：
+
+```bash
+node tools/version-assets.mjs
+```
+
+脚本按文件内容计算短哈希，写入 `index.html`（样式表、预加载字体、入口脚本和 import map）以及 `styles/main.css` 中的字体地址，形如 `main.css?v=80433014`。文件内容变了地址就变，浏览器会下载新版本，不会沿用旧缓存；没变的文件地址不变，照常走缓存。JS 模块之间的相对 `import` 不用改，由 `index.html` 里的 import map 统一映射到带版本号的地址。
 
 ## 本地预览
 

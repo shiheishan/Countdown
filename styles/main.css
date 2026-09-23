@@ -4,13 +4,13 @@
   font-family: 'Noto Serif SC';
   font-weight: 200 900;
   font-display: swap;
-  src: url('../fonts/noto-serif-sc.woff2') format('woff2');
+  src: url('../fonts/noto-serif-sc.woff2?v=dd18346c') format('woff2');
 }
 @font-face {
   font-family: 'Cormorant Garamond';
   font-weight: 300 700;
   font-display: swap;
-  src: url('../fonts/cormorant-garamond.woff2') format('woff2');
+  src: url('../fonts/cormorant-garamond.woff2?v=5d618c46') format('woff2');
 }
 
 /* ---- 变量（默认为「松釉青灰」，JS 按主题覆盖 --bg0 / --accent） ---- */
@@ -23,6 +23,8 @@
   --ease-theme: .8s ease;
   --font-serif: 'Noto Serif SC', 'Songti SC', 'STSong', serif;
   --font-num: 'Cormorant Garamond', 'Times New Roman', serif;
+  /* 桌面版（设计稿 3a，1920×1080）的缩放单位：1 设计像素 = var(--s) */
+  --s: min(calc(100vw / 1920), calc(100vh / 1080));
 }
 
 *,
@@ -78,8 +80,8 @@ body {
 .blob-a {
   left: 50%;
   top: -40%;
-  width: 1200px;
-  height: 900px;
+  width: calc(1800 * var(--s));
+  height: calc(1350 * var(--s));
   background: radial-gradient(closest-side, var(--b1), transparent);
   animation: flowA 26s ease-in-out infinite alternate;
 }
@@ -87,8 +89,8 @@ body {
 .blob-b {
   left: -24%;
   top: 46%;
-  width: 1000px;
-  height: 800px;
+  width: calc(1500 * var(--s));
+  height: calc(1200 * var(--s));
   background: radial-gradient(closest-side, var(--blob-b), transparent);
   animation: flowB 32s ease-in-out infinite alternate;
 }
@@ -96,8 +98,8 @@ body {
 .blob-c {
   left: 26%;
   top: 18%;
-  width: 640px;
-  height: 640px;
+  width: calc(960 * var(--s));
+  height: calc(960 * var(--s));
   background: radial-gradient(closest-side, var(--blob-c), transparent);
   animation: flowC 38s ease-in-out infinite alternate;
 }
@@ -139,7 +141,7 @@ body {
   min-height: 100svh;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  padding: clamp(20px, 3.125vw, 40px) clamp(20px, 10vw, 128px) clamp(24px, 3.75vw, 48px);
+  padding: max(20px, calc(56 * var(--s))) max(20px, calc(192 * var(--s))) max(24px, calc(72 * var(--s)));
   overflow-x: clip;
 }
 
@@ -147,7 +149,7 @@ body {
 .themes {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: max(12px, calc(18 * var(--s)));
 }
 
 .theme-dot {
@@ -155,8 +157,8 @@ body {
   appearance: none;
   border: none;
   padding: 0;
-  width: 14px;
-  height: 14px;
+  width: max(14px, calc(18 * var(--s)));
+  height: max(14px, calc(18 * var(--s)));
   border-radius: 50%;
   background: var(--dot);
   cursor: pointer;
@@ -192,12 +194,12 @@ body {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 16px;
+  gap: calc(22 * var(--s));
   font-weight: 400;
 }
 
 .headline-aside {
-  font-size: clamp(16px, 1.72vw, 22px);
+  font-size: max(16px, calc(32 * var(--s)));
   color: var(--muted);
 }
 
@@ -206,7 +208,7 @@ body {
 }
 
 .headline-name {
-  font-size: clamp(30px, 3.75vw, 48px);
+  font-size: max(30px, calc(72 * var(--s)));
   font-weight: 600;
   line-height: 1;
   letter-spacing: .08em;
@@ -218,8 +220,8 @@ body {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  column-gap: clamp(8px, 1.5625vw, 20px);
-  margin-top: clamp(20px, 2.8vw, 36px);
+  column-gap: calc(30 * var(--s));
+  margin-top: calc(40 * var(--s));
   font-variant-numeric: lining-nums tabular-nums;
 }
 
@@ -230,10 +232,10 @@ body {
 }
 
 .clock-days {
-  font-size: clamp(112px, 21.875vw, 280px);
+  font-size: calc(520 * var(--s));
   font-weight: 500;
-  line-height: .8;
-  letter-spacing: -.02em;
+  line-height: .78;
+  letter-spacing: -.03em;
 }
 
 /* 桌面版：「天」和时分秒与天数排成一行 */
@@ -242,12 +244,12 @@ body {
 }
 
 .clock-unit {
-  font-size: clamp(24px, 3.4375vw, 44px);
-  margin-right: clamp(8px, 1.875vw, 24px);
+  font-size: calc(80 * var(--s));
+  margin-right: calc(48 * var(--s));
 }
 
 .clock-hms {
-  font-size: clamp(44px, 8.75vw, 112px);
+  font-size: calc(210 * var(--s));
   font-weight: 400;
   line-height: 1;
   letter-spacing: .01em;
@@ -287,8 +289,8 @@ body {
 }
 
 .info {
-  margin-top: clamp(20px, 2.2vw, 28px);
-  font-size: clamp(15px, 1.4vw, 18px);
+  margin-top: calc(44 * var(--s));
+  font-size: max(15px, calc(26 * var(--s)));
   color: var(--muted);
   text-wrap: balance;
 }
@@ -307,15 +309,15 @@ body {
 }
 
 .progress {
-  width: min(560px, 100%);
-  margin-top: clamp(32px, 4.375vw, 56px);
+  width: 100%;
+  margin-top: calc(72 * var(--s));
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: max(10px, calc(16 * var(--s)));
 }
 
 .progress-track {
-  height: 3px;
+  height: max(3px, calc(4 * var(--s)));
   border-radius: 2px;
   background: var(--track);
   overflow: hidden;
@@ -334,7 +336,7 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  font-size: 15px;
+  font-size: max(14px, calc(22 * var(--s)));
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
@@ -343,18 +345,19 @@ body {
 .foot {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px 56px;
-  font-size: 15px;
+  justify-content: space-between;
+  gap: 10px calc(84 * var(--s));
+  font-size: max(14px, calc(22 * var(--s)));
 }
 
 .foot-item {
   display: flex;
-  gap: 12px;
+  gap: max(12px, calc(18 * var(--s)));
   align-items: baseline;
 }
 
 .foot-label {
-  font-size: 13px;
+  font-size: max(13px, calc(19 * var(--s)));
   color: var(--muted);
   letter-spacing: .1em;
 }
@@ -371,10 +374,31 @@ body {
   content: none;
 }
 
+/* 桌面版多位数天数：两位数 340、三位及以上 260（设计稿 daysSizeW） */
+@media (min-width: 641px) {
+  .clock[data-digits='2'] .clock-days {
+    font-size: calc(340 * var(--s));
+  }
+
+  .clock[data-digits='3'] .clock-days,
+  .clock[data-digits='4'] .clock-days {
+    font-size: calc(260 * var(--s));
+  }
+}
+
 /* ---- 手机版（设计稿 2f：个位数出血，多位数放大，右侧竖向进度） ---- */
 @media (max-width: 640px) {
   .page {
     padding: 8px 24px max(28px, env(safe-area-inset-bottom));
+  }
+
+  .theme-dot {
+    width: 14px;
+    height: 14px;
+  }
+
+  .foot-label {
+    font-size: 13px;
   }
 
   .blob-a { width: 744px; height: 558px; }
@@ -555,6 +579,7 @@ body {
     flex-direction: column;
     gap: 14px;
     padding: 0 4px;
+    font-size: 15px;
   }
 
   .foot-item {
