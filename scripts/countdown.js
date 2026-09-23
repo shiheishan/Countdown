@@ -1,300 +1,134 @@
-import { elements } from './dom.js';
-import { breakdownDuration, humanizeDuration, formatBJT, rangeStatus } from '../utils/time.js';
+import { elements, setText } from './dom.js';
+import {
+  DAY,
+  bjtStartOfDayUTC,
+  breakdownDuration,
+  formatCnDateWeekday,
+  pad2,
+  rangeStatus,
+} from '../utils/time.js';
 
-const RADIUS = 52;
-const RING_LENGTH = 2 * Math.PI * RADIUS;
-const RING_ANIMATION_DURATION = 420;
-const RING_ANIMATION_EPSILON = 1e-4;
-
-const STATE_BADGE_LABELS = {
-  before: '等待',
-  during: '进行中',
-  after: '已结束',
+const HEADLINE_PARTS = {
+  before: { pre: '距离', post: '还有' },
+  during: { pre: '', post: '假期中，还剩' },
+  after: { pre: '', post: '已结束' },
 };
 
-const HOME_HEADLINES = {
-  before: '距离国庆·中秋还有',
-  during: '国庆·中秋',
-  after: '距离国庆·中秋结束已经过去',
+const DOCUMENT_TITLES = {
+  before: (title) => `距离${title}还有`,
+  during: (title) => `${title}假期中`,
+  after: (title) => `${title}已结束`,
 };
 
-let ringAnimationFrame = null;
-let ringCurrentRatio = 0;
-let ringInitialized = false;
-
-let activeEventKey = null;
-let activeStart = null;
-let activeEnd = null;
-let activeTitle = '';
-let totalDuration = 0;
-let totalText = '';
-
-const previousDigits = {
-  days: '',
-  hours: '',
-  minutes: '',
-  seconds: '',
-};
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const shownDigits = new WeakMap();
 
 const clamp01 = (value) => Math.min(1, Math.max(0, value));
-
 const toDate = (value) => (value instanceof Date ? value : new Date(value));
 
-function resetDigitsState() {
-  Object.keys(previousDigits).forEach((key) => {
-    previousDigits[key] = '';
-  });
+function digitSlot(char) {
+  const slot = document.createElement('span');
+  slot.className = 'digit';
+  const inner = document.createElement('span');
+  inner.textContent = char;
+  slot.appendChild(inner);
+  return slot;
 }
 
-function ensureDigitSlots(container, count) {
+// 逐字符渲染；长度不变时只给变化的字符播放翻动动画
+function renderDigits(container, text) {
   if (!container) return;
-  if (container.children.length === count) return;
-  container.innerHTML = '';
-  for (let index = 0; index < count; index += 1) {
-    const span = document.createElement('span');
-    span.className = 'digit';
-    span.textContent = '-';
-    container.appendChild(span);
-  }
-}
+  const previous = shownDigits.get(container) ?? '';
+  if (previous === text) return;
+  shownDigits.set(container, text);
 
-function setDigits(container, key, value, width = 2) {
-  if (!container) return;
-  const target = String(Math.max(0, value)).padStart(width, '0');
-  ensureDigitSlots(container, target.length);
-
-  for (let index = 0; index < target.length; index += 1) {
-    const char = target[index];
-    const digit = container.children[index];
-    if (previousDigits[key].charAt(index) !== char) {
-      digit.classList.remove('is-ticking');
-      void digit.offsetWidth;
-      digit.textContent = char;
-      digit.classList.add('is-ticking');
-    } else if (!digit.textContent) {
-      digit.textContent = char;
-    }
-  }
-
-  previousDigits[key] = target;
-}
-
-function updateRingGeometry(ringArc) {
-  if (ringArc) {
-    ringArc.setAttribute('stroke-dasharray', RING_LENGTH.toFixed(2));
-  }
-}
-
-function resetRingProgress() {
-  if (ringAnimationFrame) {
-    cancelAnimationFrame(ringAnimationFrame);
-    ringAnimationFrame = null;
-  }
-  ringCurrentRatio = 0;
-  ringInitialized = false;
-}
-
-function applyRingFrame({ arc, head, pct }, ratio) {
-  const safeRatio = clamp01(Number.isFinite(ratio) ? ratio : 0);
-
-  if (arc) {
-    const offset = RING_LENGTH * (1 - safeRatio);
-    arc.style.strokeDashoffset = offset.toFixed(3);
-  }
-
-  if (pct) {
-    const percentValue = Math.round(safeRatio * 100);
-    pct.textContent = `${percentValue}%`;
-  }
-
-  if (!head) return;
-
-  const theta = -Math.PI / 2 + safeRatio * 2 * Math.PI;
-  if (safeRatio > 0) {
-    const cx = 60 + Math.cos(theta) * RADIUS;
-    const cy = 60 + Math.sin(theta) * RADIUS;
-    head.setAttribute('cx', cx.toFixed(2));
-    head.setAttribute('cy', cy.toFixed(2));
-    head.setAttribute('opacity', safeRatio >= 1 ? '0.65' : '1');
-    head.setAttribute('r', safeRatio >= 1 ? '4.6' : '3.8');
-  } else {
-    head.setAttribute('cx', '60');
-    head.setAttribute('cy', '8');
-    head.setAttribute('r', '3.8');
-    head.setAttribute('opacity', '0');
-  }
-}
-
-function setRingProgress(ringElements, ratio, statusText) {
-  if (!ringElements) return;
-  const { arc, head, pct, state } = ringElements;
-
-  if (state) {
-    state.textContent = statusText;
-  }
-
-  if (!arc) return;
-
-  const targetRatio = clamp01(Number.isFinite(ratio) ? ratio : 0);
-
-  if (!ringInitialized) {
-    applyRingFrame({ arc, head, pct }, targetRatio);
-    ringCurrentRatio = targetRatio;
-    ringInitialized = true;
+  if (previous.length !== text.length || reducedMotion.matches) {
+    container.replaceChildren(...[...text].map(digitSlot));
     return;
   }
 
-  if (Math.abs(targetRatio - ringCurrentRatio) <= RING_ANIMATION_EPSILON) {
-    applyRingFrame({ arc, head, pct }, targetRatio);
-    ringCurrentRatio = targetRatio;
-    return;
-  }
+  [...text].forEach((char, index) => {
+    const oldChar = previous[index];
+    if (char === oldChar) return;
 
-  if (ringAnimationFrame) {
-    cancelAnimationFrame(ringAnimationFrame);
-    ringAnimationFrame = null;
-  }
+    const incoming = document.createElement('span');
+    incoming.className = 'digit-in';
+    incoming.textContent = char;
 
-  const startRatio = ringCurrentRatio;
-  const delta = targetRatio - startRatio;
-  const startTime = performance.now();
+    const outgoing = document.createElement('span');
+    outgoing.className = 'digit-out';
+    outgoing.setAttribute('aria-hidden', 'true');
+    outgoing.textContent = oldChar;
+    outgoing.addEventListener('animationend', () => outgoing.remove(), { once: true });
 
-  const step = (timestamp) => {
-    const elapsed = Math.min(1, (timestamp - startTime) / RING_ANIMATION_DURATION);
-    const eased = startRatio + delta * (1 - Math.pow(1 - elapsed, 3));
-    applyRingFrame({ arc, head, pct }, eased);
-
-    if (elapsed < 1) {
-      ringAnimationFrame = requestAnimationFrame(step);
-    } else {
-      ringAnimationFrame = null;
-      ringCurrentRatio = targetRatio;
-      applyRingFrame({ arc, head, pct }, targetRatio);
-    }
-  };
-
-  ringAnimationFrame = requestAnimationFrame(step);
-}
-
-function getHeadline(state) {
-  return HOME_HEADLINES[state] ?? HOME_HEADLINES.before;
-}
-
-function ensureEvent(event) {
-  if (!event) return false;
-
-  const start = toDate(event.start);
-  const end = toDate(event.end);
-  const key = `${event.id ?? 'event'}-${start.getTime()}-${end.getTime()}`;
-
-  if (activeEventKey === key) {
-    return true;
-  }
-
-  activeEventKey = key;
-  activeStart = start;
-  activeEnd = end;
-  activeTitle = event.title ?? event.name ?? '';
-  totalDuration = Math.max(0, activeEnd.getTime() - activeStart.getTime());
-  totalText = humanizeDuration(totalDuration);
-
-  const { digits, meta, labels, ring } = elements;
-  updateRingGeometry(ring.arc);
-  resetRingProgress();
-  resetDigitsState();
-
-  ['days', 'hours', 'minutes', 'seconds'].forEach((keyName) => {
-    ensureDigitSlots(digits[keyName], 2);
+    container.children[index].replaceChildren(incoming, outgoing);
   });
+}
 
-  if (labels.start) {
-    labels.start.textContent = formatBJT(activeStart);
-  }
-  if (labels.end) {
-    labels.end.textContent = formatBJT(activeEnd);
-  }
-  if (meta.total) {
-    meta.total.textContent = totalText;
-  }
-
-  return true;
+function isSameDay(a, b) {
+  return bjtStartOfDayUTC(a).getTime() === bjtStartOfDayUTC(b).getTime();
 }
 
 export function renderCountdown(event, now = new Date()) {
-  if (!ensureEvent(event)) return;
+  if (!event) return;
 
-  const current = now instanceof Date ? now : new Date(now);
+  const current = toDate(now);
   const nowMs = current.getTime();
-  const { digits, meta, statusBadge, ring, pageTitle } = elements;
+  const start = toDate(event.start);
+  const end = toDate(event.end);
+  const leadStart = toDate(event.leadStart ?? event.start);
+  const title = event.title ?? '';
+  const { headline, clock, range, progress, vprogress } = elements;
 
-  const status = rangeStatus(current, { start: activeStart, end: activeEnd });
-  const state = status.state;
-  const targetMs = status.target.getTime();
-  const diffMs = state === 'after' ? Math.max(0, nowMs - targetMs) : Math.max(0, targetMs - nowMs);
+  const { state, target } = rangeStatus(current, { start, end });
+  const diffMs = state === 'after' ? nowMs - end.getTime() : target.getTime() - nowMs;
+  const parts = breakdownDuration(diffMs);
 
-  const remainingParts = breakdownDuration(diffMs);
-  setDigits(digits.days, 'days', remainingParts.d, 2);
-  setDigits(digits.hours, 'hours', remainingParts.h, 2);
-  setDigits(digits.minutes, 'minutes', remainingParts.m, 2);
-  setDigits(digits.seconds, 'seconds', remainingParts.s, 2);
+  const headlineParts = HEADLINE_PARTS[state];
+  setText(headline.pre, headlineParts.pre);
+  setText(headline.name, title);
+  setText(headline.post, headlineParts.post);
+  const documentTitle = DOCUMENT_TITLES[state](title);
+  if (document.title !== documentTitle) document.title = documentTitle;
 
-  const elapsedMs = Math.max(0, nowMs - activeStart.getTime());
-  const untilStartMs = Math.max(0, activeStart.getTime() - nowMs);
-  const remainMs = Math.max(0, activeEnd.getTime() - nowMs);
-  const totalMs = Math.max(0, activeEnd.getTime() - activeStart.getTime());
-  let ratio = 0;
-  if (state === 'after') {
-    ratio = 1;
-  } else if (state === 'during' && totalMs > 0) {
-    ratio = Math.min(1, Math.max(0, elapsedMs / totalMs));
+  // 天数位数决定手机版布局：个位数出血放大，多位数按位数缩放
+  const daysText = String(parts.d);
+  if (clock.root && clock.root.dataset.digits !== String(daysText.length)) {
+    clock.root.dataset.digits = String(daysText.length);
+  }
+  renderDigits(clock.days, daysText);
+  renderDigits(clock.hms, `${pad2(parts.h)}:${pad2(parts.m)}:${pad2(parts.s)}`);
+
+  // 放假天数：结束时间是最后一天 23:59:59，补 1 秒凑整
+  const totalDays = Math.round((end.getTime() + 1000 - start.getTime()) / DAY);
+  // 连接符「至 / —」和「·」由 CSS 按桌面 / 手机分别补上
+  setText(range.from, formatCnDateWeekday(start));
+  setText(range.to, isSameDay(start, end) ? '' : formatCnDateWeekday(end));
+  setText(range.total, `共 ${totalDays} 天`);
+
+  // 未开始：从上一个假期结束到本假期开始的等待进度；进行中：假期本身的进度
+  const waitTotalMs = start.getTime() - leadStart.getTime();
+  const holidayTotalMs = end.getTime() - start.getTime();
+  let ratio = 1;
+  let progressText = '已结束';
+  if (state === 'before') {
+    ratio = waitTotalMs > 0 ? clamp01((nowMs - leadStart.getTime()) / waitTotalMs) : 0;
+    const waitedDays = breakdownDuration(nowMs - leadStart.getTime()).d;
+    progressText = `${event.leadAfter ? `${event.leadAfter}后` : ''}已过 ${waitedDays} 天`;
+  } else if (state === 'during') {
+    ratio = holidayTotalMs > 0 ? clamp01((nowMs - start.getTime()) / holidayTotalMs) : 0;
+    const dayIndex = Math.floor((nowMs - start.getTime()) / DAY) + 1;
+    progressText = `第 ${dayIndex} 天，共 ${totalDays} 天`;
   }
 
-  if (meta.fill) {
-    meta.fill.style.transform = `scaleX(${ratio})`;
-  }
-  if (meta.pct) {
-    const percent = state === 'after' ? 1 : ratio;
-    meta.pct.textContent = `${(percent * 100).toFixed(1)}%`;
-  }
-
-  if (meta.elapsed) {
-    if (state === 'before') {
-      meta.elapsed.textContent = '未开始';
-    } else if (state === 'after') {
-      meta.elapsed.textContent = humanizeDuration(totalDuration);
-    } else {
-      meta.elapsed.textContent = humanizeDuration(elapsedMs);
-    }
-  }
-
-  if (meta.remain) {
-    if (state === 'after') {
-      meta.remain.textContent = '已结束';
-    } else if (state === 'before') {
-      meta.remain.textContent = humanizeDuration(untilStartMs);
-    } else {
-      meta.remain.textContent = humanizeDuration(remainMs);
-    }
-  }
-
-  if (meta.total) {
-    meta.total.textContent = totalText;
-  }
-
-  const statusText = STATE_BADGE_LABELS[state] ?? STATE_BADGE_LABELS.before;
-  if (statusBadge) {
-    statusBadge.textContent = statusText;
-  }
-  setRingProgress(ring, ratio, statusText);
-
-  const headline = getHeadline(state);
-  if (pageTitle) {
-    pageTitle.textContent = headline;
-  }
-
-  if (activeTitle && activeTitle.trim() && activeTitle.trim() !== headline.trim()) {
-    document.title = `${headline} · ${activeTitle}`;
-  } else {
-    document.title = headline;
-  }
+  const percent = Math.round(ratio * 100);
+  const ratioText = ratio.toFixed(4);
+  if (progress.fill) progress.fill.style.transform = `scaleX(${ratioText})`;
+  if (vprogress.fill) vprogress.fill.style.transform = `scaleY(${ratioText})`;
+  if (vprogress.dot) vprogress.dot.style.top = `${(ratio * 100).toFixed(2)}%`;
+  [progress.track, vprogress.root].forEach((bar) => bar?.setAttribute('aria-valuenow', String(percent)));
+  setText(progress.text, progressText);
+  setText(vprogress.text, progressText);
+  setText(progress.pct, `${percent}%`);
+  setText(vprogress.pct, `${percent}%`);
 }
