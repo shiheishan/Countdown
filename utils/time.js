@@ -4,33 +4,11 @@ export const MIN = 60 * SEC;
 export const HOUR = 60 * MIN;
 export const DAY = 24 * HOUR;
 
-export const BJT_TZ = 'Asia/Shanghai';
 export const BJT_OFFSET_MS = 8 * 60 * 60 * 1000;
 
-const pad = (value) => String(value).padStart(2, '0');
+export const pad2 = (value) => String(value).padStart(2, '0');
 
-const bjtFormatter = new Intl.DateTimeFormat('zh-CN', {
-  timeZone: BJT_TZ,
-  hourCycle: 'h23',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-});
-
-export function formatBJT(date) {
-  const safeDate = date instanceof Date ? date : new Date(Number(date) || Date.now());
-  const parts = bjtFormatter.formatToParts(safeDate);
-  const bucket = { year: '0000', month: '00', day: '00', hour: '00', minute: '00', second: '00' };
-  parts.forEach((part) => {
-    if (part.type in bucket) {
-      bucket[part.type] = part.value;
-    }
-  });
-  return `${bucket.year}-${bucket.month}-${bucket.day} ${bucket.hour}:${bucket.minute}:${bucket.second}`;
-}
+const WEEKDAYS = '日一二三四五六';
 
 // ---- 北京时间工具（UTC+08:00）----
 export function bjtParts(date = new Date()) {
@@ -61,27 +39,35 @@ export function bjtAddDaysUTC(date, n) {
   return bjtLocalToUTC(p.y, p.M, p.d + n);
 }
 
-const GOLDEN_WEEK_YEAR = 2025;
-const GOLDEN_WEEK_START_MS = bjtLocalToUTC(GOLDEN_WEEK_YEAR, 10, 1).getTime();
-const GOLDEN_WEEK_END_MS = bjtLocalToUTC(GOLDEN_WEEK_YEAR, 10, 8, 23, 59, 59).getTime(); // 结束于 2025-10-08 23:59:59 BJT
-
-export function goldenWeekRangeBJT(now = new Date()) {
-  void now;
-  return {
-    start: new Date(GOLDEN_WEEK_START_MS),
-    end: new Date(GOLDEN_WEEK_END_MS),
-  };
+// 'YYYY-MM-DD' 按北京时间解析
+export function bjtDateStringToUTC(dateString, hh = 0, mm = 0, ss = 0) {
+  const [y, M, d] = String(dateString).split('-').map(Number);
+  return bjtLocalToUTC(y, M, d, hh, mm, ss);
 }
 
+// 两个时刻相差的自然日数（北京时间）
+export function bjtDayDiff(from, to) {
+  return Math.round((bjtStartOfDayUTC(to).getTime() - bjtStartOfDayUTC(from).getTime()) / DAY);
+}
+
+// 「9月25日」
+export function formatCnDate(date) {
+  const p = bjtParts(date);
+  return `${p.M}月${p.d}日`;
+}
+
+// 「9月25日（周五）」
+export function formatCnDateWeekday(date) {
+  return `${formatCnDate(date)}（周${WEEKDAYS[bjtParts(date).dow]}）`;
+}
+
+// 元旦当天，结束于 1 月 1 日 23:59:59（与节假日数据的写法一致）
 export function newYearRangeBJT(now = new Date()) {
-  const y = bjtParts(now).y;
-  const sThis = bjtLocalToUTC(y, 1, 1);
-  const eThis = bjtLocalToUTC(y, 1, 2);
   const source = now instanceof Date ? now : new Date(Number(now) || Date.now());
-  if (source < eThis) return { start: sThis, end: eThis };
-  const sNext = bjtLocalToUTC(y + 1, 1, 1);
-  const eNext = bjtLocalToUTC(y + 1, 1, 2);
-  return { start: sNext, end: eNext };
+  const y = bjtParts(source).y;
+  const end = bjtLocalToUTC(y, 1, 1, 23, 59, 59);
+  if (source < end) return { start: bjtLocalToUTC(y, 1, 1), end };
+  return { start: bjtLocalToUTC(y + 1, 1, 1), end: bjtLocalToUTC(y + 1, 1, 1, 23, 59, 59) };
 }
 
 export function nextSundayRangeBJT(now = new Date()) {
@@ -114,16 +100,4 @@ export function breakdownDuration(duration) {
   remaining -= minutes * MIN;
   const seconds = Math.floor(remaining / SEC);
   return { d: days, h: hours, m: minutes, s: seconds };
-}
-
-export function humanizeDuration(duration) {
-  const safe = Math.max(0, duration);
-  const { d, h, m } = breakdownDuration(safe);
-  return `${d}天 ${pad(h)}小时 ${pad(m)}分钟`;
-}
-
-export function formatDuration(duration) {
-  const safe = Math.max(0, duration);
-  const { d, h, m, s } = breakdownDuration(safe);
-  return `${d} 天 ${pad(h)}:${pad(m)}:${pad(s)}`;
 }
