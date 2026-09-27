@@ -34,13 +34,16 @@ for (const font of fonts) {
 }
 writeFileSync(join(root, cssPath), css);
 
-// 2. index.html：样式表、预加载字体、入口脚本
+// 2. index.html：样式表、预加载字体、入口脚本、图标
 let html = read('index.html').toString();
 html = withVersion(html, `./${cssPath}`, hash(cssPath));
 for (const font of fonts) {
   html = withVersion(html, `./fonts/${font}`, hash(`fonts/${font}`));
 }
 html = withVersion(html, './scripts/app.js', hash('scripts/app.js'));
+for (const icon of ['icons/favicon.svg', 'icons/apple-touch-icon.png']) {
+  html = withVersion(html, `./${icon}`, hash(icon));
+}
 
 // 3. import map：所有 JS 模块
 const modules = ['config', 'scripts', 'utils'].flatMap(listJs);

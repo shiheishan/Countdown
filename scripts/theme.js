@@ -3,6 +3,16 @@ import { STORAGE_KEYS } from '../config/app.js';
 import { elements } from './dom.js';
 
 const layers = new Map();
+
+// 浏览器标签图标（1a 缺口环 16px 版），颜色跟随主题强调色
+function faviconHref(color) {
+  const ring = `cx="50" cy="50" r="34" fill="none" stroke="${color}" stroke-width="16"`;
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` +
+    `<circle ${ring} opacity=".22"/>` +
+    `<circle ${ring} stroke-linecap="round" stroke-dasharray="171 1000" transform="rotate(-90 50 50)"/></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
 const dots = new Map();
 
 function buildLayer(theme) {
@@ -39,7 +49,9 @@ function applyTheme(themeId, persist) {
   const root = document.documentElement;
 
   root.style.setProperty('--bg0', theme.bg[0]);
-  root.style.setProperty('--accent', theme.accent ?? theme.acc[1]);
+  const accent = theme.accent ?? theme.acc[1];
+  root.style.setProperty('--accent', accent);
+  if (elements.favicon) elements.favicon.href = faviconHref(accent);
   root.dataset.theme = theme.id;
 
   layers.forEach((layer, id) => layer.classList.toggle('is-active', id === theme.id));

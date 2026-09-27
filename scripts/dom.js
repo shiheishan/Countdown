@@ -2,6 +2,7 @@ const byId = (id) => document.getElementById(id);
 
 export const elements = {
   bg: byId('bg'),
+  favicon: byId('favicon'),
   themes: byId('themes'),
   headline: {
     pre: byId('hlPre'),
