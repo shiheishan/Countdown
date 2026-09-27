@@ -13,6 +13,7 @@
 │   ├── events.js       # 节假日数据源、区间解析与主页活动选择
 │   └── themes.js       # 主题配色列表
 ├── fonts               # 本地托管的字体（可变字体 woff2）及 OFL 许可
+├── icons               # 标签图标 favicon.svg 与 apple-touch-icon.png
 ├── index.html          # 页面结构（含资源版本号，由 tools/ 脚本生成）
 ├── scripts
 │   ├── app.js          # 应用入口：加载节假日并每秒刷新
@@ -46,6 +47,10 @@
   | `national-day` | 国庆节（含与中秋合并的年份） |
 
 - 所有时间均按北京时间（UTC+08:00）计算，假期结束时间为最后一天 23:59:59。
+
+## 图标
+
+`icons/` 下是浏览器标签图标与 iOS 主屏图标，取自 Claude Design 的 1a「缺口环」。标签图标会随所选主题的强调色切换（`scripts/theme.js`），`icons/favicon.svg` 是加载前的默认（松釉青灰）。
 
 ## 其他配置
 
