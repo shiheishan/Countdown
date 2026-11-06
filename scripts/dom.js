@@ -31,6 +31,7 @@ export const elements = {
     fill: byId('vfill'),
     dot: byId('vdot'),
     pct: byId('vpct'),
+    label: byId('vlabel'),
     text: byId('progTextM'),
   },
   footer: {

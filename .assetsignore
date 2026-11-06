@@ -1,0 +1,11 @@
+# 部署时不上传、不在网站上公开的文件（Workers 静态资源，语法同 .gitignore）。
+# 网站只需要 index.html 和 config/ fonts/ icons/ scripts/ styles/ utils/ vendor/。
+# 新增只供开发用的文件或目录时，记得加到这里。
+
+# 隐藏文件和目录：.git、构建时生成的 .wrangler、本机工具目录等
+.*
+
+# 开发和部署用的文件
+README.md
+tools/
+wrangler.jsonc

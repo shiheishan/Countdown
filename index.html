@@ -8,7 +8,8 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=993916d5" />
   <link rel="preload" href="./fonts/cormorant-garamond.woff2?v=5d618c46" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="./fonts/noto-serif-sc.woff2?v=dd18346c" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="./styles/main.css?v=80433014" />
+  <link rel="stylesheet" href="./vendor/skullet/skullet.css?v=2d5fd47e" />
+  <link rel="stylesheet" href="./styles/main.css?v=360aa00b" />
   <!-- 资源版本号由 tools/version-assets.mjs 生成，勿手改 -->
   <script type="importmap">
   {
@@ -16,13 +17,14 @@
       "./config/app.js": "./config/app.js?v=e7dd3721",
       "./config/events.js": "./config/events.js?v=d9aa8654",
       "./config/themes.js": "./config/themes.js?v=c8b27363",
-      "./scripts/app.js": "./scripts/app.js?v=d55dcbff",
-      "./scripts/countdown.js": "./scripts/countdown.js?v=09c1b7aa",
-      "./scripts/dom.js": "./scripts/dom.js?v=66b6905b",
+      "./scripts/app.js": "./scripts/app.js?v=04f133fa",
+      "./scripts/countdown.js": "./scripts/countdown.js?v=a989dd4b",
+      "./scripts/dom.js": "./scripts/dom.js?v=26fc6f5b",
       "./scripts/footer.js": "./scripts/footer.js?v=6d0db4e4",
       "./scripts/holidays.js": "./scripts/holidays.js?v=3b107918",
       "./scripts/theme.js": "./scripts/theme.js?v=033a6efa",
-      "./utils/time.js": "./utils/time.js?v=ca88976b"
+      "./utils/time.js": "./utils/time.js?v=ca88976b",
+      "./vendor/skullet/skullet.js": "./vendor/skullet/skullet.js?v=86fcd7b3"
     }
   }
   </script>
@@ -44,10 +46,10 @@
       <div class="vprogress-fill" id="vfill"></div>
       <div class="vprogress-dot" id="vdot"></div>
       <div class="vprogress-pct" id="vpct"></div>
-      <div class="vprogress-label" aria-hidden="true">进度</div>
+      <div class="vprogress-label" id="vlabel" aria-hidden="true">进度</div>
     </div>
 
-    <main class="hero">
+    <main class="hero" data-pending>
       <h1 class="headline" aria-live="polite">
         <span class="headline-aside" id="hlPre"></span>
         <span class="headline-name" id="hlName">--</span>
@@ -55,10 +57,10 @@
       </h1>
 
       <div class="clock" id="clock">
-        <span class="clock-days" id="days">-</span>
+        <span class="clock-days" id="days" skullet-block>-</span>
         <span class="clock-side">
-          <span class="clock-unit">天</span>
-          <span class="clock-hms" id="hms">--:--:--</span>
+          <span class="clock-unit" skullet-block>天</span>
+          <span class="clock-hms" id="hms" skullet-block>--:--:--</span>
         </span>
       </div>
 
@@ -91,6 +93,6 @@
     </footer>
   </div>
 
-  <script type="module" src="./scripts/app.js?v=d55dcbff"></script>
+  <script type="module" src="./scripts/app.js?v=04f133fa"></script>
 </body>
 </html>

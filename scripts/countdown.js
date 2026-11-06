@@ -35,14 +35,25 @@ function digitSlot(char) {
   return slot;
 }
 
+// 两次刷新相隔超过这个时长，说明中间没在正常每秒走（页面在后台、电脑睡眠），不播翻动
+const FLIP_GAP_MS = 1500;
+
 // 逐字符渲染；长度不变时只给变化的字符播放翻动动画
 function renderDigits(container, text) {
   if (!container) return;
-  const previous = shownDigits.get(container) ?? '';
-  if (previous === text) return;
-  shownDigits.set(container, text);
+  const shown = shownDigits.get(container);
+  const previous = shown?.text ?? '';
+  const now = performance.now();
+  if (previous === text) {
+    if (shown) shown.at = now;
+    return;
+  }
+  shownDigits.set(container, { text, at: now });
 
-  if (previous.length !== text.length || reducedMotion.matches) {
+  // 后台标签页里动画不播，翻动会攒到切回来时一起补播，秒数看起来快速连跳；
+  // 所以后台时、以及切回来后的第一次跳变，都直接换成当前数字
+  const stale = !shown || now - shown.at > FLIP_GAP_MS;
+  if (previous.length !== text.length || reducedMotion.matches || document.hidden || stale) {
     container.replaceChildren(...[...text].map(digitSlot));
     return;
   }
@@ -127,8 +138,15 @@ export function renderCountdown(event, now = new Date()) {
   if (vprogress.fill) vprogress.fill.style.transform = `scaleY(${ratioText})`;
   if (vprogress.dot) vprogress.dot.style.top = `${(ratio * 100).toFixed(2)}%`;
   [progress.track, vprogress.root].forEach((bar) => bar?.setAttribute('aria-valuenow', String(percent)));
-  setText(progress.text, progressText);
-  setText(vprogress.text, progressText);
-  setText(progress.pct, `${percent}%`);
-  setText(vprogress.pct, `${percent}%`);
+
+  // 等待期：进度条从上一个假期走到本假期，两端标上节日名——左 / 上端是上一个假期，
+  // 右 / 下端是本假期，百分比并进说明文字。假期中和已结束仍是「说明 + 百分比」
+  const percentText = `${percent}%`;
+  const waiting = state === 'before';
+  const caption = waiting ? `${progressText} · ${percentText}` : progressText;
+  setText(progress.text, caption);
+  setText(vprogress.text, caption);
+  setText(progress.pct, waiting ? title : percentText);
+  setText(vprogress.pct, waiting ? title : percentText);
+  setText(vprogress.label, (waiting && event.leadAfter) || '进度');
 }

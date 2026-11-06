@@ -1,0 +1,16 @@
+{
+  // Cloudflare Workers 部署配置：Worker 名 countdown，只托管静态资源。
+  // main 分支由 Workers Builds 执行 npx wrangler deploy 正式发布；
+  // PR 分支执行 npx wrangler preview 生成预览，它要求必须有 previews 块。
+  // 顶层设置与此前 wrangler deploy 在构建机上自动生成的配置一致，正式发布行为不变。
+  "name": "countdown",
+  "compatibility_date": "2026-09-26",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "."
+  },
+  // 留空：预览沿用上面的设置
+  "previews": {}
+}

@@ -187,6 +187,28 @@ body {
   display: flex;
   flex-direction: column;
   padding: 24px 0;
+  /* 骨架灰条跟随主题色 */
+  --skullet-base: color-mix(in srgb, var(--accent) 16%, transparent);
+  --skullet-highlight: rgb(255 255 255 / .45);
+  /* 骨架里的文字条只画字身（大写高度到基线），细一些，上下行不粘连 */
+  --skullet-text-top: cap-height;
+  --skullet-text-bottom: baseline;
+}
+
+/* 脚本接管前先藏住 -- 占位，避免闪一下 */
+.hero[data-pending] {
+  visibility: hidden;
+}
+
+/* 大号数字在骨架里画成整块（index.html 里标了 skullet-block），给它圆角 */
+.hero [skullet-block] {
+  border-radius: calc(18 * var(--s));
+}
+
+/* skullet 把内容包进一层 pane，保持原来的纵向排布 */
+.hero > [skullet-pane] {
+  display: flex;
+  flex-direction: column;
 }
 
 .headline {
@@ -478,6 +500,13 @@ body {
     transition: color var(--ease-theme);
   }
 
+  /* 揭开时 skullet 给骨架层和内容层加遮罩，遮罩只管层自己的框，伸出左边的个位数会被切掉一截。
+     把层的框往左扩出伸出的距离、再用内边距抵消，排版不变 */
+  .hero > [skullet-pane] {
+    margin-left: -64px;
+    padding-left: 64px;
+  }
+
   .clock[data-digits='1'] .clock-side {
     display: flex;
     flex-direction: column;
@@ -564,12 +593,14 @@ body {
     white-space: nowrap;
   }
 
+  /* 上端标签：等待期是上一个假期的名字（最多 3 个字），从竖条顶端往上排 */
   .vprogress-label {
     position: absolute;
     left: 50%;
-    top: -44px;
+    bottom: calc(100% + 13px);
     transform: translateX(-50%);
     writing-mode: vertical-rl;
+    white-space: nowrap; /* 只设 bottom 时可用高度不够，不禁止折行就会一字一列 */
     font-size: 12px;
     letter-spacing: .3em;
     color: var(--muted);
