@@ -86,13 +86,65 @@ function createTick(requestedId) {
   };
 }
 
+// 时钟三块（天数、「天」、时分秒）的字形都比元素框小：框在基线下面还留着下伸的空间，
+// 手机个位数还会伸出元素框（负外边距 + 字距收紧）。骨架块照元素框画，三块底边对不齐、
+// 也和数字对不上，所以按字体度量算出字形实际占的矩形（相对元素框）。
+// probe：用哪个字量高度，数字传 'H'，不传就量元素自己的文字
+function measureInk(el, probe) {
+  if (!el?.textContent) return null;
+  const style = getComputedStyle(el);
+  const ctx = document.createElement('canvas').getContext('2d');
+  ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+  // canvas 没法开齐线数字（lnum），直接量数字得到的是 Cormorant 默认的旧式数字（3、9 会下伸）；
+  // 齐线数字站在基线上、高度约等于大写字母，所以数字改量「H」
+  const { fontBoundingBoxAscent: ascent } = ctx.measureText('H');
+  const glyph = ctx.measureText(probe ?? el.textContent);
+  const inkAscent = glyph.actualBoundingBoxAscent;
+  const inkDescent = probe ? 0 : Math.max(0, glyph.actualBoundingBoxDescent);
+  const box = el.getBoundingClientRect();
+  // 文字的排版框：顶边 + 字体上伸 = 基线；左右取实际排版位置。字距是负的，
+  // 最后一个字后面也收了一份，字形会伸出排版框这么多，宽度补回来
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const text = range.getBoundingClientRect();
+  const spacing = parseFloat(style.letterSpacing) || 0;
+  const baseline = text.top - box.top + ascent;
+  return {
+    box: { width: box.width, height: box.height },
+    left: text.left - box.left,
+    top: baseline - inkAscent,
+    width: text.width + Math.max(0, -spacing),
+    height: inkAscent + inkDescent,
+  };
+}
+
+// 骨架里的时钟块：保留元素框占位，灰块换成按字形定位的子元素
+function fitBlockToInk(el, ink) {
+  if (!el || !ink || !(ink.width > 0) || !(ink.height > 0)) return;
+  el.removeAttribute('skullet-block');
+  Object.assign(el.style, { position: 'relative', width: `${ink.box.width}px`, height: `${ink.box.height}px` });
+  const block = document.createElement('span');
+  block.setAttribute('skullet-block', '');
+  Object.assign(block.style, {
+    position: 'absolute', left: `${ink.left}px`, top: `${ink.top}px`,
+    width: `${ink.width}px`, height: `${ink.height}px`,
+  });
+  // 时钟按基线对齐，没有文字的元素没有基线，整排会错开；放一个零尺寸行内块撑出原来的行框和基线
+  const anchor = document.createElement('span');
+  Object.assign(anchor.style, { display: 'inline-block', width: '0', height: '0' });
+  el.replaceChildren(anchor, block);
+}
+
 // 首屏：用第一次渲染好的主体克隆出骨架，光带扫过的地方紧跟着揭开真内容
 function revealHero() {
   const hero = document.querySelector('.hero');
   if (!hero) return;
+  const CLOCK_PARTS = [['.clock-days', 'H'], ['.clock-unit'], ['.clock-hms', 'H']];
+  const clockInk = CLOCK_PARTS.map(([selector, probe]) => measureInk(hero.querySelector(selector), probe));
   const real = document.createDocumentFragment();
   real.append(...hero.childNodes);
   const sample = real.cloneNode(true);
+  CLOCK_PARTS.forEach(([selector], i) => fitBlockToInk(sample.querySelector(selector), clockInk[i]));
   sample.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
   sample.querySelectorAll('[aria-live]').forEach((el) => el.removeAttribute('aria-live'));
 

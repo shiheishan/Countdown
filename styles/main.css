@@ -500,6 +500,13 @@ body {
     transition: color var(--ease-theme);
   }
 
+  /* 揭开时 skullet 给骨架层和内容层加遮罩，遮罩只管层自己的框，伸出左边的个位数会被切掉一截。
+     把层的框往左扩出伸出的距离、再用内边距抵消，排版不变 */
+  .hero > [skullet-pane] {
+    margin-left: -64px;
+    padding-left: 64px;
+  }
+
   .clock[data-digits='1'] .clock-side {
     display: flex;
     flex-direction: column;
