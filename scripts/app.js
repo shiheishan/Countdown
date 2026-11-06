@@ -203,6 +203,10 @@ function boot() {
     tick();
     window.setInterval(tick, 1000);
   }, kick);
+  // 后台时计时器会被放慢，切回来立刻刷新一次，不等下一秒
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) tick();
+  });
 
   refreshHolidays(tick);
 }
