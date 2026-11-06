@@ -16,7 +16,7 @@
 ├── icons               # 标签图标 favicon.svg 与 apple-touch-icon.png
 ├── index.html          # 页面结构（含资源版本号，由 tools/ 脚本生成）
 ├── scripts
-│   ├── app.js          # 应用入口：加载节假日并每秒刷新
+│   ├── app.js          # 应用入口：首屏骨架加载、加载节假日并每秒刷新
 │   ├── countdown.js    # 标题、倒计时数字、日期与进度
 │   ├── dom.js          # DOM 引用集中出口
 │   ├── footer.js       # 页脚：下一个节日 / 下个周日
@@ -26,8 +26,10 @@
 │   └── main.css        # 页面样式
 ├── tools
 │   └── version-assets.mjs  # 给资源地址加内容哈希版本号
-└── utils
-    └── time.js         # 北京时间工具函数
+├── utils
+│   └── time.js         # 北京时间工具函数
+└── vendor
+    └── skullet         # 骨架加载库 skullet 0.0.3（MIT），本地托管
 ```
 
 ## 节假日数据
@@ -47,6 +49,16 @@
   | `national-day` | 国庆节（含与中秋合并的年份） |
 
 - 所有时间均按北京时间（UTC+08:00）计算，假期结束时间为最后一天 23:59:59。
+
+## 首屏加载
+
+首屏用 [skullet](https://github.com/lochie/skullet)（v0.0.3，MIT）做骨架加载，库文件放在 `vendor/skullet/`，不依赖外网。逻辑在 `scripts/app.js`：
+
+- 第一次渲染完成后，把主体克隆一份交给 skullet 量出骨架，所以骨架和揭开后的内容位置完全一致。每次加载前会清掉 skullet 记在 `localStorage` 里的旧形状（`forgetShapes()`）：它记的形状把文字换成了 0，数字区宽度对不上。
+- 骨架出现后只扫一道 20° 斜光，从左往右；光扫过的地方紧跟着显出内容（skullet 的 wipe 揭开，前沿位置由 `startSweep()` 按光带算出），前沿约 1 秒扫完全部内容。时长、光带宽度等常量在文件开头。
+- 天数、「天」和时分秒在 `index.html` 里标了 `skullet-block`，骨架里各画成一整块。灰条颜色跟随主题强调色（`styles/main.css` 的 `.hero`）。
+- 系统开了「减少动态效果」时没有扫光，骨架停 1 秒后直接显示内容。
+- 接管扫光用到了 skullet 的内部结构（灰条在 shadow DOM 里、扫光是 Web Animations），**升级 skullet 后要重新检查首屏效果**。更新库文件：从 `https://esm.sh/skullet@<版本>/es2022/skullet.mjs` 和 `https://esm.sh/skullet@<版本>/styles.css` 下载，去掉末尾的 `sourceMappingURL` 注释，覆盖 `vendor/skullet/skullet.js` 和 `skullet.css`，再运行下面的版本号脚本。
 
 ## 图标
 
@@ -72,7 +84,7 @@
 node tools/version-assets.mjs
 ```
 
-脚本按文件内容计算短哈希，写入 `index.html`（样式表、预加载字体、入口脚本和 import map）以及 `styles/main.css` 中的字体地址，形如 `main.css?v=80433014`。文件内容变了地址就变，浏览器会下载新版本，不会沿用旧缓存；没变的文件地址不变，照常走缓存。JS 模块之间的相对 `import` 不用改，由 `index.html` 里的 import map 统一映射到带版本号的地址。
+脚本按文件内容计算短哈希，写入 `index.html`（样式表、预加载字体、入口脚本和 import map，含 `vendor/skullet` 的样式和脚本）以及 `styles/main.css` 中的字体地址，形如 `main.css?v=80433014`。文件内容变了地址就变，浏览器会下载新版本，不会沿用旧缓存；没变的文件地址不变，照常走缓存。JS 模块之间的相对 `import` 不用改，由 `index.html` 里的 import map 统一映射到带版本号的地址。
 
 ## 本地预览
 

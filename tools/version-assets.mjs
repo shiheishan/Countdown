@@ -40,13 +40,14 @@ html = withVersion(html, `./${cssPath}`, hash(cssPath));
 for (const font of fonts) {
   html = withVersion(html, `./fonts/${font}`, hash(`fonts/${font}`));
 }
+html = withVersion(html, './vendor/skullet/skullet.css', hash('vendor/skullet/skullet.css'));
 html = withVersion(html, './scripts/app.js', hash('scripts/app.js'));
 for (const icon of ['icons/favicon.svg', 'icons/apple-touch-icon.png']) {
   html = withVersion(html, `./${icon}`, hash(icon));
 }
 
 // 3. import map：所有 JS 模块
-const modules = ['config', 'scripts', 'utils'].flatMap(listJs);
+const modules = ['config', 'scripts', 'utils', 'vendor/skullet'].flatMap(listJs);
 const imports = Object.fromEntries(modules.map((path) => [`./${path}`, `./${path}?v=${hash(path)}`]));
 const importMap = `<script type="importmap">\n${JSON.stringify({ imports }, null, 2)
   .split('\n')

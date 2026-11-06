@@ -187,6 +187,28 @@ body {
   display: flex;
   flex-direction: column;
   padding: 24px 0;
+  /* 骨架灰条跟随主题色 */
+  --skullet-base: color-mix(in srgb, var(--accent) 16%, transparent);
+  --skullet-highlight: rgb(255 255 255 / .45);
+  /* 骨架里的文字条只画字身（大写高度到基线），细一些，上下行不粘连 */
+  --skullet-text-top: cap-height;
+  --skullet-text-bottom: baseline;
+}
+
+/* 脚本接管前先藏住 -- 占位，避免闪一下 */
+.hero[data-pending] {
+  visibility: hidden;
+}
+
+/* 大号数字在骨架里画成整块（index.html 里标了 skullet-block），给它圆角 */
+.hero [skullet-block] {
+  border-radius: calc(18 * var(--s));
+}
+
+/* skullet 把内容包进一层 pane，保持原来的纵向排布 */
+.hero > [skullet-pane] {
+  display: flex;
+  flex-direction: column;
 }
 
 .headline {
