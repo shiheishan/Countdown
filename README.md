@@ -28,8 +28,9 @@
 │   └── version-assets.mjs  # 给资源地址加内容哈希版本号
 ├── utils
 │   └── time.js         # 北京时间工具函数
-└── vendor
-    └── skullet         # 骨架加载库 skullet 0.0.3（MIT），本地托管
+├── vendor
+│   └── skullet         # 骨架加载库 skullet 0.0.3（MIT），本地托管
+└── wrangler.jsonc      # Cloudflare Workers 部署配置
 ```
 
 ## 节假日数据
@@ -89,3 +90,10 @@ node tools/version-assets.mjs
 ## 本地预览
 
 页面使用 ES Modules，需要通过静态服务器访问（如 `python3 -m http.server` 或 `npx serve`），直接双击打开 `index.html` 无法加载脚本。
+
+## 部署
+
+部署在 Cloudflare Workers（Worker 名 `countdown`），由 Workers Builds 连接本仓库自动构建，配置在 `wrangler.jsonc`：
+
+- 合并到 `main` 后执行 `npx wrangler deploy`，正式发布。
+- PR 分支执行 `npx wrangler preview`，生成预览版本，结果显示在 PR 的检查里。这个命令要求 `wrangler.jsonc` 里有 `previews` 块（可以为空），删掉它预览构建就会失败。
