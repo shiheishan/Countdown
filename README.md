@@ -97,3 +97,4 @@ node tools/version-assets.mjs
 
 - 合并到 `main` 后执行 `npx wrangler deploy`，正式发布。
 - PR 分支执行 `npx wrangler preview`，生成预览版本，结果显示在 PR 的检查里。这个命令要求 `wrangler.jsonc` 里有 `previews` 块（可以为空），删掉它预览构建就会失败。
+- 静态资源目录是仓库根目录，`.assetsignore`（语法同 `.gitignore`）列出不上传、不公开的文件：`.git` 等隐藏文件、`README.md`、`tools/`、`wrangler.jsonc`。新增只供开发用的文件或目录时，记得加进去，否则会被当作网站文件公开。
