@@ -36,7 +36,8 @@
 ## 节假日数据
 
 - **来源**：[NateScarlet/holiday-cn](https://github.com/NateScarlet/holiday-cn)，自动解析国务院放假通知，经 jsDelivr 获取当年和次年的 JSON。无需每年手动改日期；次年数据在官方发布（通常 11 月）后自动生效。
-- **回退顺序**：网络获取 → 本地缓存（`localStorage`）→ `config/events.js` 中的 `FALLBACK_DAYS` 内置数据 → 按规则计算的元旦。
+- **回退顺序**：按年份逐年补齐，每一年依次取网络获取 → 本地缓存（`localStorage`）→ `config/events.js` 中的 `FALLBACK_YEARS` 内置数据；一年都没有时按规则计算元旦（只算 1 天）。
+- **内置数据要每年更新**：国务院通常在 11 月前后发布次年安排，发布后把次年加进 `FALLBACK_YEARS`（用 `offDays(节日名, 第一天, 天数)` 写连续的休息日）。不加的话，拉不到 jsDelivr 的访客（国内网络下并不少见）在本年最后一个假期过后，会看到只放 1 天的元旦。
 - **主页显示**：默认显示正在进行或下一个节假日。可用查询参数 `?event=<id>` 固定某个节日：
 
   | id | 节日 |

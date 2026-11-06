@@ -17,16 +17,40 @@ export const HOLIDAY_IDS = {
   国庆节: 'national-day',
 };
 
-// 网络与缓存都不可用时的内置数据（格式同 holiday-cn 的 days）
-export const FALLBACK_DAYS = [
-  ...['2026-06-19', '2026-06-20', '2026-06-21'].map((date) => ({ name: '端午节', date, isOffDay: true })),
-  ...['2026-09-25', '2026-09-26', '2026-09-27'].map((date) => ({ name: '中秋节', date, isOffDay: true })),
-  ...['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05', '2026-10-06', '2026-10-07'].map((date) => ({
-    name: '国庆节',
-    date,
+// 从 first 起连续 count 天的休息日（格式同 holiday-cn 的 days）
+function offDays(name, first, count) {
+  const firstMs = Date.parse(`${first}T00:00:00Z`);
+  return Array.from({ length: count }, (_, index) => ({
+    name,
+    date: new Date(firstMs + index * DAY).toISOString().slice(0, 10),
     isOffDay: true,
-  })),
-];
+  }));
+}
+
+// 内置数据，按年份存放（同 holiday-cn 每年一个文件里的 days）。某一年拉不到网络数据、缓存里也没有时用这里的。
+// 每年 11 月前后国务院发布次年安排后，把次年加进来，否则网络不通的访客会看到按规则推算的元旦（只放 1 天）
+export const FALLBACK_YEARS = {
+  // https://www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm
+  2026: [
+    ...offDays('元旦', '2026-01-01', 3),
+    ...offDays('春节', '2026-02-15', 9),
+    ...offDays('清明节', '2026-04-04', 3),
+    ...offDays('劳动节', '2026-05-01', 5),
+    ...offDays('端午节', '2026-06-19', 3),
+    ...offDays('中秋节', '2026-09-25', 3),
+    ...offDays('国庆节', '2026-10-01', 7),
+  ],
+  // https://www.gov.cn/zhengce/zhengceku/202611/content_7085102.htm
+  2027: [
+    ...offDays('元旦', '2027-01-01', 3),
+    ...offDays('春节', '2027-02-05', 9),
+    ...offDays('清明节', '2027-04-03', 3),
+    ...offDays('劳动节', '2027-05-01', 5),
+    ...offDays('端午节', '2027-06-09', 1),
+    ...offDays('中秋节', '2027-09-15', 1),
+    ...offDays('国庆节', '2027-10-01', 7),
+  ],
+};
 
 // 「国庆节、中秋节」→ 「国庆·中秋」；单个节日名保持原样
 function holidayTitle(name) {
@@ -87,14 +111,16 @@ export function leadIn(event, ranges, now = new Date()) {
     : { leadStart: new Date(startMs - DEFAULT_LEAD_IN), leadAfter: '' };
 }
 
-// 主页活动之后的下一个节日（供侧边栏使用）；没有可用数据时回退到元旦
+// 主页活动之后的下一个节日（供页脚使用）；没有更多数据时按规则推算元旦，
+// 推算出的元旦就是主页活动时返回 null（页脚不再重复显示同一个节日）
 export function pickNextHoliday(now, ranges, exclude) {
   const nowMs = (now instanceof Date ? now : new Date(now)).getTime();
   const excludeMs = exclude ? new Date(exclude.start).getTime() : null;
-  return (
-    ranges.find((range) => range.end.getTime() > nowMs && range.start.getTime() !== excludeMs) ??
-    buildNewYear(now)
-  );
+  const isOther = (range) => new Date(range.start).getTime() !== excludeMs;
+  const next = ranges.find((range) => range.end.getTime() > nowMs && isOther(range));
+  if (next) return next;
+  const newYear = buildNewYear(now);
+  return isOther(newYear) ? newYear : null;
 }
 
 // 正在进行或下一个节日；指定 requestedId 时只在该节日里找（都已结束则显示最近一次）；

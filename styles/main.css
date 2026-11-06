@@ -378,6 +378,11 @@ body {
   align-items: baseline;
 }
 
+/* 没有下一个节日时只隐藏内容，位置留着，「下个周日」不跟着挪 */
+.foot-item.is-empty {
+  visibility: hidden;
+}
+
 .foot-label {
   font-size: max(13px, calc(19 * var(--s)));
   color: var(--muted);

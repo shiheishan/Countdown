@@ -11,6 +11,8 @@ function relativeDays(now, date) {
 export function renderFooter(now, holiday) {
   const { footer } = elements;
 
+  // 主倒计时之后已经没有已知的节日（次年安排还没拿到）时，这一项留空，不重复显示同一个节日
+  footer.nextItem?.classList.toggle('is-empty', !holiday);
   if (holiday) {
     const { state } = rangeStatus(now, holiday);
     setText(footer.next, `${holiday.title} · ${formatCnDate(holiday.start)}`);
