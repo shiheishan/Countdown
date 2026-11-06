@@ -56,9 +56,11 @@
 
 首屏用 [skullet](https://github.com/lochie/skullet)（v0.0.3，MIT）做骨架加载，库文件放在 `vendor/skullet/`，不依赖外网。逻辑在 `scripts/app.js`：
 
-- 第一次渲染完成后，把主体克隆一份交给 skullet 量出骨架，所以骨架和揭开后的内容位置完全一致。每次加载前会清掉 skullet 记在 `localStorage` 里的旧形状（`forgetShapes()`）：它记的形状把文字换成了 0，数字区宽度对不上。
+- 骨架覆盖主体（`.hero`）和页脚（`.foot`）。第一次渲染完成后，把两处各克隆一份交给 skullet 量出骨架，所以骨架和揭开后的内容位置完全一致；`visibility: hidden` 的元素（如没有下一个节日时的「之后」）标 `skullet-ignore`，不画灰条。每次加载前会清掉 skullet 记在 `localStorage` 里的旧形状（`forgetShapes()`）：它记的形状把文字换成了 0，数字区宽度对不上。
 - 骨架出现后只扫一道 20° 斜光，从左往右；光扫过的地方紧跟着显出内容（skullet 的 wipe 揭开，前沿位置由 `startSweep()` 按光带算出），前沿约 1 秒扫完全部内容。时长、光带宽度等常量在文件开头。
-- 天数、「天」和时分秒在 `index.html` 里标了 `skullet-block`，骨架里各画成一整块。灰条颜色跟随主题强调色（`styles/main.css` 的 `.hero`）。
+- 扫光的速度和时长只按主体算：页脚算光的位置时往上挪，至少挪掉和主体之间的空白，再挪到不超出主体的扫光终点为止，和主体同时扫完。不这样的话，手机上页脚在最下面，1 秒扫完光就得快 40%。
+- 天数、「天」和时分秒在 `index.html` 里标了 `skullet-block`，骨架里各画成一整块，按字形定位（`measureInk()`），底边都落在基线上。灰条颜色跟随主题强调色（`styles/main.css` 的 `.hero, .foot`）。
+- skullet 会把内容包进 `[skullet-pane]`（骨架阶段里面还有 `[skullet-loading]`、`[skullet-ghost]` 两层），`styles/main.css` 让这几层沿用原来的排法：主体纵向，页脚从 `.foot` 继承横排 / 竖排。改页脚布局时，这几层会跟着继承，不用另外改。
 - 系统开了「减少动态效果」时没有扫光，骨架停 1 秒后直接显示内容。
 - 接管扫光用到了 skullet 的内部结构（灰条在 shadow DOM 里、扫光是 Web Animations），**升级 skullet 后要重新检查首屏效果**。更新库文件：从 `https://esm.sh/skullet@<版本>/es2022/skullet.mjs` 和 `https://esm.sh/skullet@<版本>/styles.css` 下载，去掉末尾的 `sourceMappingURL` 注释，覆盖 `vendor/skullet/skullet.js` 和 `skullet.css`，再运行下面的版本号脚本。
 
