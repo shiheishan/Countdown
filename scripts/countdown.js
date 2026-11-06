@@ -127,8 +127,15 @@ export function renderCountdown(event, now = new Date()) {
   if (vprogress.fill) vprogress.fill.style.transform = `scaleY(${ratioText})`;
   if (vprogress.dot) vprogress.dot.style.top = `${(ratio * 100).toFixed(2)}%`;
   [progress.track, vprogress.root].forEach((bar) => bar?.setAttribute('aria-valuenow', String(percent)));
-  setText(progress.text, progressText);
-  setText(vprogress.text, progressText);
-  setText(progress.pct, `${percent}%`);
-  setText(vprogress.pct, `${percent}%`);
+
+  // 等待期：进度条从上一个假期走到本假期，两端标上节日名——左 / 上端是上一个假期，
+  // 右 / 下端是本假期，百分比并进说明文字。假期中和已结束仍是「说明 + 百分比」
+  const percentText = `${percent}%`;
+  const waiting = state === 'before';
+  const caption = waiting ? `${progressText} · ${percentText}` : progressText;
+  setText(progress.text, caption);
+  setText(vprogress.text, caption);
+  setText(progress.pct, waiting ? title : percentText);
+  setText(vprogress.pct, waiting ? title : percentText);
+  setText(vprogress.label, (waiting && event.leadAfter) || '进度');
 }

@@ -593,12 +593,14 @@ body {
     white-space: nowrap;
   }
 
+  /* 上端标签：等待期是上一个假期的名字（最多 3 个字），从竖条顶端往上排 */
   .vprogress-label {
     position: absolute;
     left: 50%;
-    top: -44px;
+    bottom: calc(100% + 13px);
     transform: translateX(-50%);
     writing-mode: vertical-rl;
+    white-space: nowrap; /* 只设 bottom 时可用高度不够，不禁止折行就会一字一列 */
     font-size: 12px;
     letter-spacing: .3em;
     color: var(--muted);
