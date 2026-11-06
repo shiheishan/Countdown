@@ -187,16 +187,22 @@ body {
   display: flex;
   flex-direction: column;
   padding: 24px 0;
-  /* 骨架灰条跟随主题色 */
+}
+
+/* 首屏骨架（主体和页脚） */
+.hero,
+.foot {
+  /* 灰条跟随主题色 */
   --skullet-base: color-mix(in srgb, var(--accent) 16%, transparent);
   --skullet-highlight: rgb(255 255 255 / .45);
-  /* 骨架里的文字条只画字身（大写高度到基线），细一些，上下行不粘连 */
+  /* 文字条只画字身（大写高度到基线），细一些，上下行不粘连 */
   --skullet-text-top: cap-height;
   --skullet-text-bottom: baseline;
 }
 
 /* 脚本接管前先藏住 -- 占位，避免闪一下 */
-.hero[data-pending] {
+.hero[data-pending],
+.foot[data-pending] {
   visibility: hidden;
 }
 
@@ -205,10 +211,23 @@ body {
   border-radius: calc(18 * var(--s));
 }
 
-/* skullet 把内容包进一层 pane，保持原来的纵向排布 */
+/* skullet 把内容包进一层 pane，保持原来的排布：主体纵向；
+   页脚沿用它自己的排法（桌面横排、两端对齐，手机竖排），所以一层层从 .foot 继承。
+   骨架阶段 pane 里还有 loading、ghost 两层，骨架内容在 ghost 里，也要照这样排 */
 .hero > [skullet-pane] {
   display: flex;
   flex-direction: column;
+}
+
+.foot > [skullet-pane],
+.foot > [skullet-pane] > [skullet-loading],
+.foot > [skullet-pane] > [skullet-loading] > [skullet-ghost] {
+  display: flex;
+  flex: 1;
+  flex-direction: inherit;
+  flex-wrap: inherit;
+  justify-content: inherit;
+  gap: inherit;
 }
 
 .headline {
@@ -376,6 +395,11 @@ body {
   display: flex;
   gap: max(12px, calc(18 * var(--s)));
   align-items: baseline;
+}
+
+/* 没有下一个节日时只隐藏内容，位置留着，「下个周日」不跟着挪 */
+.foot-item.is-empty {
+  visibility: hidden;
 }
 
 .foot-label {

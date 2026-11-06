@@ -23,19 +23,41 @@ const slanted = (x, y) => x + y * SLANT;
 
 // skullet 自带的扫光是首尾相接、按全页时钟循环的光带，打开时常常已经扫到一半，
 // 左右看着不对称。这里接管它给每根灰条加的动画，换成单独一道光带，
-// 并返回跟着这道光走的揭开方式（RevealSpec）；没有扫光（减少动态效果）时返回 null。
-function startSweep(hero) {
-  const animations = [...hero.querySelectorAll('*')].flatMap((el) => el.shadowRoot?.getAnimations() ?? []);
-  const bars = animations.map((animation) => animation.effect?.target).filter(Boolean);
-  if (!bars.length) return null;
-  animations.forEach((animation) => animation.cancel());
+// 并返回跟着这道光走的揭开方式（RevealSpec，每个区域一份）；没有扫光（减少动态效果）时返回 null。
+// roots 是所有骨架区域（主体、页脚），一道光依次扫过它们；光带宽度按第一个区域（主体）定。
+function startSweep(roots) {
+  const groups = roots.map((root) => {
+    const animations = [...root.querySelectorAll('*')].flatMap((el) => el.shadowRoot?.getAnimations() ?? []);
+    return { animations, bars: animations.map((animation) => animation.effect?.target).filter(Boolean) };
+  });
+  if (!groups.some(({ bars }) => bars.length)) return null;
 
-  const rects = bars.map((bar) => bar.getBoundingClientRect());
-  const band = Math.min(Math.max(hero.getBoundingClientRect().width * 0.35, 160), 360);
+  // 后面的区域（页脚）往上挪 shift 再算斜坐标，扫光的速度和时长只由第一个区域（主体）决定：
+  // 至少挪掉和前一个区域之间的空白，光像连续扫过一整块内容；再挪到不超出主体的扫光终点为止。
+  // 手机上页脚在最下面、又有靠右的文字，按实际位置算，1 秒扫完光就得快 40%
+  let lastBottom = null; // 前一个区域最后一行的底边（挪过之后）
+  let reach = null; // 第一个区域的扫光终点
+  groups.forEach((group) => {
+    group.animations.forEach((animation) => animation.cancel());
+    group.rects = group.bars.map((bar) => bar.getBoundingClientRect());
+    group.shift = 0;
+    if (!group.rects.length) return;
+    const end = Math.max(...group.rects.map((rect) => slanted(rect.right, rect.bottom)));
+    if (reach !== null) {
+      const gap = Math.min(...group.rects.map((rect) => rect.top)) - lastBottom;
+      group.shift = Math.max(gap, (end - reach) / SLANT, 0);
+    }
+    lastBottom = Math.max(...group.rects.map((rect) => rect.bottom)) - group.shift;
+    reach ??= end;
+  });
+  const startOf = (rect, group) => slanted(rect.left, rect.top - group.shift); // 矩形最先碰到光的点
+  const endOf = (rect, group) => slanted(rect.right, rect.bottom - group.shift); // 最后碰到光的点
+
+  const band = Math.min(Math.max(roots[0].getBoundingClientRect().width * 0.35, 160), 360);
   const edge = EDGE / COS; // 柔边换算到斜坐标
   const lag = band * 0.6 + edge; // 前沿落后光带前端的距离：光最亮处一过，内容就开始显出来
-  const from = Math.min(...rects.map((rect) => slanted(rect.left, rect.top))); // 最先碰到光的点
-  const to = Math.max(...rects.map((rect) => slanted(rect.right, rect.bottom))); // 最后碰到光的点
+  const from = Math.min(...groups.flatMap((group) => group.rects.map((rect) => startOf(rect, group))));
+  const to = Math.max(...groups.flatMap((group) => group.rects.map((rect) => endOf(rect, group))));
   // 前沿要在 REVEAL_MS 内走完全部内容；留两帧余量，免得 skullet 先收尾
   const speed = (to - from + 2 * edge) / (REVEAL_MS - 32);
   const delay = (lag - edge) / speed; // 前沿碰到第一块灰块的时刻
@@ -43,15 +65,15 @@ function startSweep(hero) {
   const startedAt = document.timeline.currentTime;
   const lead = () => from + (document.timeline.currentTime - startedAt) * speed; // 光带前端
 
-  bars.forEach((bar, index) => {
-    const rect = rects[index];
+  groups.forEach((group) => group.bars.forEach((bar, index) => {
+    const rect = group.rects[index];
     // 光带画在比它宽 rise 的背景块里，斜着的两头不会被块边截出硬边
     const rise = rect.height * SLANT;
     const stops = BAND_ALPHA.map((alpha, i) => {
       const at = (rise + (band * i) / (BAND_ALPHA.length - 1)) * COS;
       return `color-mix(in srgb, var(--skullet-highlight) ${alpha * 100}%, transparent) ${at.toFixed(1)}px`;
     });
-    const position = (x) => `${(x - band - rise - slanted(rect.left, rect.top)).toFixed(1)}px 0`;
+    const position = (x) => `${(x - band - rise - startOf(rect, group)).toFixed(1)}px 0`;
     bar.style.backgroundImage = `linear-gradient(110deg, ${stops.join(', ')})`;
     bar.style.backgroundSize = `${(band + rise).toFixed(1)}px 100%`;
     bar.style.backgroundRepeat = 'no-repeat';
@@ -60,21 +82,21 @@ function startSweep(hero) {
       { duration: total, fill: 'forwards' },
     );
     sweep.startTime = startedAt; // 所有灰条和揭开前沿共用同一个起点
-  });
+  }));
 
   // 前沿后面（斜坐标更小）显出内容、藏起骨架，前面相反；中间 2×EDGE 柔和过渡
-  const wipeAt = (rect, behind, ahead) => {
-    const at = (lead() - lag - slanted(rect.left, rect.top)) * COS;
+  const wipeAt = (rect, group, behind, ahead) => {
+    const at = (lead() - lag - startOf(rect, group)) * COS;
     return `linear-gradient(110deg, ${behind} ${(at - EDGE).toFixed(1)}px, ${ahead} ${(at + EDGE).toFixed(1)}px)`;
   };
-  return {
+  return groups.map((group) => ({
     wipe: {
-      mask: (progress, { rect }) => wipeAt(rect, '#000', 'transparent'),
-      out: (progress, { rect }) => wipeAt(rect, 'transparent', '#000'),
+      mask: (progress, { rect }) => wipeAt(rect, group, '#000', 'transparent'),
+      out: (progress, { rect }) => wipeAt(rect, group, 'transparent', '#000'),
     },
     delay,
     duration: REVEAL_MS,
-  };
+  }));
 }
 
 function createTick(requestedId) {
@@ -135,42 +157,67 @@ function fitBlockToInk(el, ink) {
   el.replaceChildren(anchor, block);
 }
 
-// 首屏：用第一次渲染好的主体克隆出骨架，光带扫过的地方紧跟着揭开真内容
-function revealHero() {
-  const hero = document.querySelector('.hero');
-  if (!hero) return;
-  const CLOCK_PARTS = [['.clock-days', 'H'], ['.clock-unit'], ['.clock-hms', 'H']];
-  const clockInk = CLOCK_PARTS.map(([selector, probe]) => measureInk(hero.querySelector(selector), probe));
+// 把区域里第一次渲染好的内容挪出来、克隆一份交给 skullet 当骨架；返回揭开时要用的东西。
+// prepare(sample) 可以在交给 skullet 前改骨架（如时钟三块按字形画）
+function loadSkeleton(root, options, prepare) {
+  // 先去掉整块藏起来的 data-pending，下面才读得到各元素自己的可见性；
+  // 到骨架画好都在同一段脚本里同步完成，中间不会把真内容画出来
+  root.removeAttribute('data-pending');
+  // skullet 只跳过 display: none 的元素，visibility: hidden 的（如没有下一个节日时的「之后」）
+  // 照样画灰条，揭开后那里却是空的；先记下来，骨架里给它们标 skullet-ignore
+  const hidden = [...root.querySelectorAll('*')].map((el) => getComputedStyle(el).visibility === 'hidden');
   const real = document.createDocumentFragment();
-  real.append(...hero.childNodes);
+  real.append(...root.childNodes);
   const sample = real.cloneNode(true);
-  CLOCK_PARTS.forEach(([selector], i) => fitBlockToInk(sample.querySelector(selector), clockInk[i]));
+  sample.querySelectorAll('*').forEach((el, index) => {
+    if (hidden[index]) el.setAttribute('skullet-ignore', '');
+  });
+  prepare?.(sample);
   sample.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
   sample.querySelectorAll('[aria-live]').forEach((el) => el.removeAttribute('aria-live'));
+  const reveal = new Reveal(root, options);
+  reveal.load(sample);
+  return { root, real, options, reveal };
+}
+
+// 首屏：主体和页脚各用第一次渲染好的内容克隆出骨架，一道光扫过两处，光带扫过的地方紧跟着揭开真内容
+function revealPage() {
+  const hero = document.querySelector('.hero');
+  if (!hero) return;
+  const foot = document.querySelector('.foot');
+  const CLOCK_PARTS = [['.clock-days', 'H'], ['.clock-unit'], ['.clock-hms', 'H']];
+  const clockInk = CLOCK_PARTS.map(([selector, probe]) => measureInk(hero.querySelector(selector), probe));
 
   // 骨架每次都从刚渲染的真内容克隆，已经精确；skullet 记下的旧形状会把文字换成 0，
   // 数字区宽度跟着变，揭开时会错位，所以不用它的记忆
   forgetShapes();
-  const options = { reveal: 'sequence', label: '加载中' };
-  const reveal = new Reveal(hero, options);
-  reveal.load(sample);
-  hero.removeAttribute('data-pending');
+  const parts = [
+    loadSkeleton(hero, { reveal: 'sequence', label: '加载中' }, (sample) => {
+      CLOCK_PARTS.forEach(([selector], i) => fitBlockToInk(sample.querySelector(selector), clockInk[i]));
+    }),
+    // 页脚不再报「加载中」，读屏只听到主体那一次
+    ...(foot ? [loadSkeleton(foot, { reveal: 'sequence' })] : []),
+  ];
   const show = () => {
-    // 骨架期间内容不在页面上，秒数刷新留下的翻动元素没法播完、也不会被移除，
-    // 揭开时才开始播，和淡入叠成两个数字；揭开前把它们收成静止的最终状态
-    real.querySelectorAll('.digit-out').forEach((el) => el.remove());
-    real.querySelectorAll('.digit-in').forEach((el) => el.classList.remove('digit-in'));
-    reveal.show(real);
+    parts.forEach(({ real, reveal }) => {
+      // 骨架期间内容不在页面上，秒数刷新留下的翻动元素没法播完、也不会被移除，
+      // 揭开时才开始播，和淡入叠成两个数字；揭开前把它们收成静止的最终状态
+      real.querySelectorAll('.digit-out').forEach((el) => el.remove());
+      real.querySelectorAll('.digit-in').forEach((el) => el.classList.remove('digit-in'));
+      reveal.show(real);
+    });
   };
   // 等 skullet 画好灰条的下一帧：起一道光，同时开始揭开（内容先被遮住，前沿跟着光走）。
   // 没有扫光（如系统开了减少动态效果）就停一会儿后直接揭开
   requestAnimationFrame(() => {
-    const wipe = startSweep(hero);
-    if (!wipe) {
+    const specs = startSweep(parts.map(({ root }) => root));
+    if (!specs) {
       window.setTimeout(show, REVEAL_MS);
       return;
     }
-    options.reveal = wipe; // skullet 在 show() 时才读取揭开方式
+    parts.forEach(({ options }, index) => {
+      options.reveal = specs[index]; // skullet 在 show() 时才读取揭开方式
+    });
     show();
   });
 }
@@ -191,11 +238,11 @@ function boot() {
   tick();
 
   try {
-    revealHero();
+    revealPage();
   } catch (error) {
     console.error(error);
   } finally {
-    document.querySelector('.hero')?.removeAttribute('data-pending');
+    document.querySelectorAll('[data-pending]').forEach((el) => el.removeAttribute('data-pending'));
   }
 
   const kick = 1000 - (Date.now() % 1000);
